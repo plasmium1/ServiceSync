@@ -130,13 +130,13 @@ class Tag: Identifiable {
     }
 }
 
-class Post {
+class Post: Identifiable {
     var postManager: ManagerUser
     var title: String
     var postImage: Image
     var postContent: String
-    var likes: Int
-    var comments: [Comment]
+    var likes: Int?
+    var comments: [Comment]?
     var tags: [Tag]
     
     init(postManager: ManagerUser, title: String, postImage: Image, postContent: String, likes: Int, comments: [Comment], tags: [Tag]) {
@@ -166,11 +166,21 @@ class Post {
     }
     
     func getLikes() -> Int {
-        return self.likes
+        if let postLike = likes{
+            return postLike
+        }
+        else{
+            return 0
+        }
     }
     
     func getComments() -> [Comment] {
-        return self.comments
+        if let postComments = comments{
+            return postComments
+        }
+        else{
+            return [placeholderComment]
+        }
     }
     
     func getTags() -> [Tag] {
@@ -178,11 +188,15 @@ class Post {
     }
     
     func incrementLikes() {
-        self.likes += 1
+        if var postLikes = likes{
+            postLikes += 1
+        }
     }
     
     func appendComment(newComment: Comment) {
-        self.comments.append(newComment)
+        if var postComments = comments{
+            postComments.append(newComment)
+        }
     }
     
     func setTitle(title: String) {
@@ -255,3 +269,20 @@ class Badge {
         self.badgeImage = badgeImage
     }
 }
+
+var placeholderTag = Tag(name: "Making placeholders", type: "Civic Engagement")
+
+var placeholderStudent = StudentUser(name: "Alex Konwar", username: "AKonwar", id: 50220137, interests: [placeholderTag], aboutMe: "I just love making placeholders")
+
+var placeholderComment = Comment(postUser: placeholderStudent, content: "Cool!", likes: 0)
+
+var placeholderManager = ManagerUser(programName: "WE Bracelets", email: "fakeemail@gmail.com", telephone: 7735504264, description: "Someone make a fake description to fill this space")
+
+var placeholderManager2 = ManagerUser(programName: "Feed The People", email: "fakeemail@gmail.com", telephone: 7735504264, description: "Someone make a fake description to fill this space")
+
+
+var placeholderPost1 = Post(postManager: placeholderManager, title: "WE Bracelets", postImage: Image("PlaceholderImageForPost"), postContent: "Hi everyone! We had an awesome first meeting for WE Bracelets. Looking forward to meeting more people. Please stop by next week for our Thursday meeting!", likes: 0, comments: [placeholderComment], tags: [placeholderTag])
+
+var placeholderPost2 = Post(postManager: placeholderManager2, title: "Feed The People", postImage: Image("FeedThePeopleImage"), postContent: "Hi everyone! We had an awesome first meeting for Feed The People. Looking forward to meeting more people. Please stop by next week for our Thursday meeting!", likes: 0, comments: [placeholderComment], tags: [placeholderTag])
+
+var placeholderPostArray = [placeholderPost1, placeholderPost2]
