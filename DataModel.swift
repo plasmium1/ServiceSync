@@ -65,6 +65,7 @@ class ManagerUser {
     var description: String
     var profileImage: Image?
     
+    
     init(programName: String, email: String, telephone: Int, description: String, profileImage: Image) {
         self.programName = programName
         self.email = email
@@ -93,9 +94,19 @@ class ManagerUser {
         return self.profileImage!
     }
     
+    func setEmail(email: String) {
+        self.email = email
+    }
+    
     func setProfileImage(image: Image) {
         self.profileImage = image
     }
+    
+    func setDescription(description: String) {
+        self.description = description
+    }
+    
+    
 }
 
 class Tag: Identifiable {
