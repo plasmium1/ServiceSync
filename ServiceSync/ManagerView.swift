@@ -7,6 +7,8 @@
 
 import SwiftUI
 
+
+
 struct ManagerView: View {
     @State var managerObject: ManagerUser
     @State var isEditing: Bool = false;
@@ -23,10 +25,14 @@ struct ManagerView: View {
                     .frame(width: 160.0, height: 160.0)
                     .foregroundStyle(Color("profileBackgroundColor"))
                     .cornerRadius(10)
-                managerObject.getProfileImage()
-                    .resizable()
-                    .frame(width:150, height:150)
-                    .cornerRadius(10)
+                if (isEditing) {
+                    ImagePickerBox(profileUser: ImageUser(managerObject))
+                } else {
+                    managerObject.getProfileImage()
+                        .resizable()
+                        .frame(width:150, height:150)
+                        .cornerRadius(10)
+                }
             }
             Text(managerObject.getProgramName())
                 .font(.title)
@@ -34,10 +40,12 @@ struct ManagerView: View {
             if (isEditing) {
                 
                 TextField("", text: $emailInputText)
-                    .frame(width:200)
+                    .frame(width:250)
+                    .background(Color("profileBackgroundColor"))
                     .multilineTextAlignment(.center)
                     .font(.subheadline)
                     .fontWeight(.thin)
+                    .cornerRadius(8)
                 
                 HStack {
                     Text("About Your Program")
@@ -105,6 +113,12 @@ struct ManagerView: View {
                         .font(.body)
                         .frame(width:360, height:200)
                 }
+            }
+            Spacer()
+            HStack {
+                Text("Roster")
+                Spacer()
+                Text("Badges")
             }
             
         
