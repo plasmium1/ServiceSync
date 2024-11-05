@@ -48,12 +48,11 @@ class StudentUser {
         return self.badges
     }
     
-    func getImage() -> Image {
+    func getProfileImage() -> Image {
         return self.profileImage!
     }
     
-    
-    func setImage(image: Image) {
+    func setProfileImage(image: Image) {
         self.profileImage = image
     }
 }
