@@ -11,16 +11,16 @@ struct TopBar: View {
     var body: some View {
         ZStack {
             Color("topPink")
-                .frame(height:100)
+                .frame(height:90)
             Text("ServiceSync")
-                .font(.system(size: 20))
+                .font(.title)
                 .fontWeight(.bold)
-                .offset(x: -2, y:22)
+                .offset(x: -2, y:25)
                 .foregroundColor(.white)
             Text("ServiceSync")
-                .font(.system(size: 20))
+                .font(.title)
                 .fontWeight(.bold)
-                .offset(y: 22)
+                .offset(y: 23)
         }
     }
 }
