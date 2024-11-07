@@ -9,23 +9,47 @@ import Foundation
 import SwiftUI
 
 
-
-class StudentUser {
-    var name: String
+class User: ObservableObject {
     var username: String
-    var id: Int
+    var id = UUID()
+    var profileImage: Image?
+    @Published var liked: [UUID] = []
+    
+    init(username: String, profileImage: Image?) {
+        self.username = username
+        self.profileImage = profileImage
+    }
+    
+    func likePost(id: UUID) {
+        self.liked.append(id)
+    }
+    
+    func isPostLiked(post: Post) -> Bool {
+        return self.liked.contains(post.getID())
+    }
+    
+    func unlikePost(id: UUID) {
+        for post in 0...liked.count {
+            if (liked[post] == id) {
+                liked.remove(at: post)
+                break
+            }
+        }
+    }
+}
+
+class StudentUser: User {
+    var name: String
     var interests: [Tag]
     var badges: [Badge] = []
-    var profileImage: Image?
     var aboutMe: String = ""
     
     
-    init(name: String, username: String, id: Int, interests: [Tag], aboutMe: String) {
+    init(name: String, username: String, interests: [Tag], aboutMe: String, profileImage: Image?) {
         self.name = name
-        self.username = username
-        self.id = id
         self.interests = interests
         self.aboutMe = aboutMe
+        super.init(username: username, profileImage: profileImage)
     }
     
     func getName() -> String {
@@ -36,7 +60,7 @@ class StudentUser {
         return self.username
     }
     
-    func getID() -> Int {
+    func getID() -> UUID {
         return self.id
     }
     
@@ -48,34 +72,34 @@ class StudentUser {
         return self.badges
     }
     
-    func getImage() -> Image {
+    func getProfileImage() -> Image {
         return self.profileImage!
     }
     
     
-    func setImage(image: Image) {
+    func setProfileImage(image: Image) {
         self.profileImage = image
     }
+    
+    
 }
 
-class ManagerUser {
-    var programName: String
+class ManagerUser: User {
     var email: String
     var telephone: Int
     var description: String
-    var profileImage: Image?
     
     
     init(programName: String, email: String, telephone: Int, description: String, profileImage: Image) {
-        self.programName = programName
+        
         self.email = email
         self.telephone = telephone
         self.description = description
-        self.profileImage = profileImage
+        super.init(username: programName, profileImage: profileImage)
     }
     
     func getProgramName() -> String {
-        return self.programName
+        return self.username
     }
     
     func getEmail() -> String {
@@ -148,18 +172,21 @@ class Tag: Identifiable {
 
 class Post: Identifiable {
     var postManager: ManagerUser
+    var id = UUID()
     var title: String
     var postImage: Image
     var postContent: String
+    var location: String
     var likes: Int?
     var comments: [Comment]?
     var tags: [Tag]
     
-    init(postManager: ManagerUser, title: String, postImage: Image, postContent: String, likes: Int, comments: [Comment], tags: [Tag]) {
+    init(postManager: ManagerUser, title: String, postImage: Image, postContent: String, location: String, likes: Int, comments: [Comment], tags: [Tag]) {
         self.postManager = postManager
         self.title = title
         self.postImage = postImage
         self.postContent = postContent
+        self.location = location
         self.likes = likes
         self.comments = comments
         self.tags = tags
@@ -167,6 +194,10 @@ class Post: Identifiable {
     
     func getPostManager() -> ManagerUser {
         return self.postManager
+    }
+    
+    func getID() -> UUID {
+        return id
     }
     
     func getTitle() -> String {
@@ -179,6 +210,10 @@ class Post: Identifiable {
     
     func getPostContent() -> String {
         return self.postContent
+    }
+    
+    func getLocation() -> String {
+        return self.location
     }
     
     func getLikes() -> Int {
@@ -288,7 +323,7 @@ class Badge {
 
 var placeholderTag = Tag(name: "Making placeholders", type: "Civic Engagement")
 
-var placeholderStudent = StudentUser(name: "Alex Konwar", username: "AKonwar", id: 50220137, interests: [placeholderTag], aboutMe: "I just love making placeholders")
+var placeholderStudent = StudentUser(name: "Alex Konwar", username: "AKonwar", interests: [placeholderTag], aboutMe: "I just love making placeholders", profileImage: Image("profilePic"))
 
 var placeholderComment = Comment(postUser: placeholderStudent, content: "Cool!", likes: 0)
 
@@ -297,8 +332,9 @@ var placeholderManager = ManagerUser(programName: "WE Bracelets", email: "fakeem
 var placeholderManager2 = ManagerUser(programName: "Feed The People", email: "fakeemail@gmail.com", telephone: 7735504264, description: "Someone make a fake description to fill this space", profileImage: Image("profilePic"))
 
 
-var placeholderPost1 = Post(postManager: placeholderManager, title: "WE Bracelets", postImage: Image("PlaceholderImageForPost"), postContent: "Hi everyone! We had an awesome first meeting for WE Bracelets. Looking forward to meeting more people. Please stop by next week for our Thursday meeting!", likes: 0, comments: [placeholderComment], tags: [placeholderTag])
+var placeholderPost1 = Post(postManager: placeholderManager, title: "WE Bracelets", postImage: Image("PlaceholderImageForPost"), postContent: "Hi everyone! We had an awesome first meeting for WE Bracelets. Looking forward to meeting more people. Please stop by next week for our Thursday meeting!", location: "Location", likes: 0, comments: [placeholderComment], tags: [placeholderTag])
 
-var placeholderPost2 = Post(postManager: placeholderManager2, title: "Feed The People", postImage: Image("FeedThePeopleImage"), postContent: "Hi everyone! We had an awesome first meeting for Feed The People. Looking forward to meeting more people. Please stop by next week for our Thursday meeting!", likes: 0, comments: [placeholderComment], tags: [placeholderTag])
+var placeholderPost2 = Post(postManager: placeholderManager2, title: "Feed The People", postImage: Image("FeedThePeopleImage"), postContent: "Hi everyone! We had an awesome first meeting for Feed The People. Looking forward to meeting more people. Please stop by next week for our Thursday meeting!", location: "Location", likes: 0, comments: [placeholderComment], tags: [placeholderTag])
 
 var placeholderPostArray = [placeholderPost1, placeholderPost2]
+
