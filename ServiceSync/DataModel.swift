@@ -76,7 +76,6 @@ class StudentUser: User {
         return self.profileImage!
     }
     
-    
     func setProfileImage(image: Image) {
         self.profileImage = image
     }
