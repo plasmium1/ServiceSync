@@ -1,34 +1,32 @@
 //
-//  OrganizationView.swift
-//  Test
+//  VolunteerView.swift
+//  ServiceSync
 //
-//  Created by Solena Ornelas Pagnucci on 11/11/24.
+//  Created by AW on 11/13/24.
 //
 
 import SwiftUI
-import PhotosUI
 
-// Organization Profile View
-struct OrganizationView: View {
-    // Sample Organization data
-    @StateObject var organization: ManagerUser
+struct VolunteerView: View {
+    // Sample User data
+    @StateObject var user: StudentUser
     
     // For handling image picker
     @State private var isImagePickerPresented = false
     @State private var selectedImage: UIImage? = nil
     
-    // Navigate to Edit Organization Profile Screen
+    // Navigate to Edit Profile Screen (example)
     @State private var isEditingProfile = false
     
     var body: some View {
         NavigationView {
             VStack {
-                // Organization Header Section
+                // Profile Header Section
                 HStack {
-                    // Organization Logo (Placeholder or Selected Image)
+                    // Profile Picture (Placeholder or Selected Image)
                     Group {
-                        if let logo = organization.getProfileImage() {
-                            logo
+                        if let profileImage = user.getProfileImage() {
+                            profileImage
                                 .resizable()
                                 .scaledToFill()
                                 .frame(width: 100, height: 100)
@@ -39,38 +37,26 @@ struct OrganizationView: View {
                                 .fill(Color.blue)
                                 .frame(width: 100, height: 100)
                                 .overlay(
-                                    Text(organization.getUsername().prefix(1)) // First letter of organization name as placeholder
+                                    Text(user.username.prefix(1)) // First letter of username as placeholder
                                         .font(.largeTitle)
-                                        .foregroundStyle(.white)
+                                        .foregroundColor(.white)
                                 )
                         }
                     }
                     .onTapGesture {
-                        // Show the image picker when tapping the logo
+                        // Show the image picker when tapping the profile picture
                         isImagePickerPresented.toggle()
                     }
                     
-                    // Organization Information
+                    // User Information
                     VStack(alignment: .leading) {
-                        Text(organization.getUsername())
+                        Text(user.username)
                             .font(.title)
                             .fontWeight(.bold)
-                        Text(organization.getEmail())
+                        
+                        Text(user.email)
                             .font(.subheadline)
-                            .foregroundStyle(.gray)
-                        if let website = organization.getWebsite() {
-                            Text(website)
-                                .font(.subheadline)
-                                .foregroundStyle(.gray)
-                        } else {
-                            Text("No website")
-                                .font(.subheadline)
-                                .foregroundStyle(.gray)
-                        }
-                        Text(organization.getDescription())
-                            .font(.subheadline)
-                            .foregroundStyle(.gray)
-                            .lineLimit(2) // Limit description to two lines
+                            .foregroundColor(.gray)
                     }
                     
                     Spacer()
@@ -86,41 +72,40 @@ struct OrganizationView: View {
                     }) {
                         Text("Edit Profile")
                             .font(.headline)
-                            .foregroundStyle(.blue)
+                            .foregroundColor(.blue)
                     }
                     .sheet(isPresented: $isEditingProfile) {
-                        EditOrganizationProfileView(organization: organization)
+                        EditVolunteerProfileView(user: user)
                     }
                     
                     Spacer()
                     
                     Button(action: {
-                        // Handle switch account action (e.g., for admin to switch organizations)
+                        // Handle switch account action
                         print("Switch Account tapped")
                     }) {
                         Text("Switch Account")
                             .font(.headline)
-                            .foregroundStyle(.red)
+                            .foregroundColor(.red)
                     }
                 }
                 .padding()
                 
                 Divider()
                 
-                
-                
-                // Achievements Section
+                // Badges Section
                 VStack(alignment: .leading) {
-                    Text("Achievements")
+                    Text("Badges")
                         .font(.title2)
                         .fontWeight(.bold)
                         .padding(.top)
                     
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack {
-                            ForEach(organization.getBadges()) { achievement in
-                                AchievementView(achievement: achievement)
+                            ForEach(user.getBadges()) { badge in
+                                BadgeView(badge: badge)
                             }
+                            
                         }
                     }
                     .padding(.vertical)
@@ -129,20 +114,21 @@ struct OrganizationView: View {
                 Spacer()
             }
             .padding()
-            .imagePicker(isPresented: $isImagePickerPresented, selectedImage: $selectedImage, onImageSelected: { image in
-                // Update organization logo after selection
-                if let img = image {
-                    organization.setProfileImage(image: Image(uiImage: img))
+            .imagePicker(isPresented: $isImagePickerPresented, selectedImage: $selectedImage, onImageSelected: { selectedImage in
+                // Update profile image after selection
+                if let img = selectedImage {
+                    user.setProfileImage(image: Image(uiImage: img))
                 } else {
-                    organization.setProfileImage(image: nil)
+                    user.setProfileImage(image: nil)
                 }
             })
         }
+        
     }
 }
 
-struct OrganizationView_Previews: PreviewProvider {
+struct VolunteerView_Previews: PreviewProvider {
     static var previews: some View {
-        OrganizationView(organization: placeholderManager)
+        VolunteerView(user: placeholderStudent)
     }
 }

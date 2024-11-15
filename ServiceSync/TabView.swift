@@ -28,15 +28,15 @@ var body: some View {
             }
             .tag(Tab.search) // search tab
         
-        HomeView()
+        HomeScreen()
             .tabItem{
                 Label("Home", systemImage: "house")
             }
             .tag(Tab.home) // home tab
         
-        VolunteerView()
+        VolunteerView(user: placeholderStudent)
             .tabItem{
-                Label("Alerts", systemImage: "person")
+                Label("Profile", systemImage: "person")
             }
             .tag(Tab.person) // profile tab
         
