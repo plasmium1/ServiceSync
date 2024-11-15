@@ -43,7 +43,6 @@ struct ManagerPostView: View {
                     }
                 }
             }
-            .padding()
             .navigationTitle("Posts")
         }
     }

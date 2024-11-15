@@ -19,15 +19,26 @@ struct PostView: View {
     var body: some View {
         VStack(alignment: .leading) {
             HStack {
-                post.getPostManager().getProfileImage()
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 40, height: 40)
-                    .clipShape(Circle())
-                Text(post.getPostManager().getProgramName())
+                if let logo = post.getPostManager().getProfileImage() {
+                    logo
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 100, height: 100)
+                        .clipShape(Circle())
+                        .overlay(Circle().stroke(Color.white, lineWidth: 4))
+                } else {
+                    Circle()
+                        .fill(Color.blue)
+                        .frame(width: 100, height: 100)
+                        .overlay(
+                            Text(post.getPostManager().getUsername().prefix(1)) // First letter of organization name as placeholder
+                                .font(.largeTitle)
+                                .foregroundStyle(.white)
+                        )
+                }
+                Text(post.getPostManager().getUsername())
                     .font(.headline)
             }
-            .padding(.bottom, 5)
 
             post.getPostImage()
                 .resizable()

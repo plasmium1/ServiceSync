@@ -102,11 +102,6 @@ class StudentUser: User {
         return self.age
     }
     
-    func getID() -> UUID {
-        return self.id
-    }
-    
-    
     func getInterests() -> [Tag] {
         return self.interests
     }
