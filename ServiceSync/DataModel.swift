@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 
-class User: ObservableObject {
+class User: ObservableObject, Identifiable, Hashable, Equatable {
     @Published var username: String
     var id = UUID()
     @Published var profileImage: Image?
@@ -23,6 +23,14 @@ class User: ObservableObject {
         self.email = email
         self.badges = badges
     }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+     }
+    
+    static func ==(lhs: User, rhs: User) -> Bool {
+        return lhs.id == rhs.id
+        }
     
     func getUsername() -> String {
         return self.username
@@ -114,12 +122,15 @@ class ManagerUser: User {
     @Published var website: String?
     
     
+    
     init(programName: String, email: String, telephone: Int, description: String, profileImage: Image, website: String?, badges: [Badge]) {
         
         self.telephone = telephone
         self.description = description
         super.init(username: programName, profileImage: profileImage, email: email, badges: badges)
     }
+    
+    
     
     func getTelephone() -> Int {
         return self.telephone
@@ -160,14 +171,23 @@ class ManagerUser: User {
     
 }
 
-class Tag: Identifiable {
+class Tag: Identifiable, Hashable, Equatable {
     var name: String
     var type: String
+    var id = UUID()
     
     init(name: String, type: String) {
         self.name = name
         self.type = type
     }
+    
+    static func ==(lhs: Tag, rhs: Tag) -> Bool {
+            return lhs.name == rhs.name
+        }
+    
+    func hash(into hasher: inout Hasher) {
+       hasher.combine(name)
+     }
     
     func getName() -> String {
         return self.name
@@ -197,7 +217,7 @@ class Tag: Identifiable {
     }
 }
 
-class Post: Identifiable {
+class Post: Identifiable, Hashable, Equatable {
     var postManager: ManagerUser
     var id = UUID()
     var title: String
@@ -218,6 +238,14 @@ class Post: Identifiable {
         self.comments = comments
         self.tags = tags
     }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+     }
+    
+    static func ==(lhs: Post, rhs: Post) -> Bool {
+        return lhs.id == rhs.id
+        }
     
     func getPostManager() -> ManagerUser {
         return self.postManager
@@ -353,7 +381,16 @@ class Badge: Identifiable {
     }
 }
 
-var placeholderTag = Tag(name: "Making placeholders", type: "Civic Engagement")
+var placeholderTag = Tag(name: "Civic Engagement", type: "Civic Engagement")
+
+var placeholderTag2 = Tag(name: "Tech", type: "Tech")
+
+var placeholderTag3 = Tag(name: "Arts", type: "Arts")
+
+var placeholderTag4 = Tag(name: "Sports", type: "Sports")
+
+var placeholderTagsArray = [placeholderTag, placeholderTag2,placeholderTag3, placeholderTag4]
+
 
 var placeholderStudent = StudentUser(name: "Alex Konwar", username: "AKonwar", age: 17, interests: [placeholderTag], aboutMe: "I just love making placeholders", email: "fakeemail@gmail.com", profileImage: Image("profilePic"), badges: badgesArray)
 
@@ -368,7 +405,9 @@ var placeholderPost1 = Post(postManager: placeholderManager, title: "WE Bracelet
 
 var placeholderPost2 = Post(postManager: placeholderManager2, title: "Feed The People", postImage: Image("FeedThePeopleImage"), postContent: "Hi everyone! We had an awesome first meeting for Feed The People. Looking forward to meeting more people. Please stop by next week for our Thursday meeting!", location: "Location", likes: 0, comments: [placeholderComment], tags: [placeholderTag])
 
-var placeholderPostArray = [placeholderPost1, placeholderPost2]
+var placeholderPost3 = Post(postManager: placeholderManager2, title: "Nothing Here!", postImage: Image("ShruggingGuy"), postContent: "No results found", location: "Location", likes: 0, comments: [placeholderComment], tags: [placeholderTag])
+
+var placeholderPostArray = [placeholderPost1, placeholderPost2, placeholderPost3]
 
 var badgesArray: [Badge] = [
     Badge(name:"Completed Challenge", badgeImage: Image(systemName: "star.fill")),
@@ -383,3 +422,12 @@ var achievementsArray: [Badge] = [
 ]
 
 var studentArray: [StudentUser] = [placeholderStudent]
+
+var filters: [Bool] {
+    var results = [false]
+    
+    (2...placeholderTagsArray.count) .forEach{ tag in
+        results.append(false)
+    }
+    return results
+}

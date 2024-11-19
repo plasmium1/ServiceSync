@@ -9,11 +9,11 @@ import SwiftUI
 
 struct PostView: View {
     @Binding var post: Post // Binding to allow updates
-    @ObservedObject var contextUser: User
+    @Binding var contextUser: ManagerUser
     
-    init(post: Binding<Post>, contextUser: User) {
+    init(post: Binding<Post>, contextUser: Binding<ManagerUser>) {
         self._post = post
-        self._contextUser = ObservedObject(initialValue: contextUser)
+        self._contextUser = contextUser
     }
     
     var body: some View {
@@ -42,9 +42,8 @@ struct PostView: View {
 
             post.getPostImage()
                 .resizable()
-                .scaledToFit()
-                .frame(maxWidth: .infinity)
-                .frame(height: 200)
+                .scaledToFill()
+                .frame(width: 400, height: 250)
                 .cornerRadius(10)
 
             Text(post.getPostContent())
@@ -76,6 +75,11 @@ struct PostView: View {
                         .font(.title)
                 }
                 Spacer()
+                
+                Image(systemName: "flag")
+                    .resizable()
+                    .frame(width: 20, height: 20)
+                    .padding()
             }
 
             Divider()

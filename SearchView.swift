@@ -232,7 +232,7 @@ struct SearchView: View {
                                                 }
                                             }
 //                                            .offset(y: CGFloat(integerLiteral: offset))
-//
+//                                            
 //                                            count = count + 1
                                             
                                             
