@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 
-class User: ObservableObject {
+class User: ObservableObject, Identifiable, Hashable, Equatable {
     @Published var username: String
     var id = UUID()
     @Published var profileImage: Image?
@@ -23,6 +23,14 @@ class User: ObservableObject {
         self.email = email
         self.badges = badges
     }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+     }
+    
+    static func ==(lhs: User, rhs: User) -> Bool {
+        return lhs.id == rhs.id
+        }
     
     func getUsername() -> String {
         return self.username
@@ -114,12 +122,15 @@ class ManagerUser: User {
     @Published var website: String?
     
     
+    
     init(programName: String, email: String, telephone: Int, description: String, profileImage: Image, website: String?, badges: [Badge]) {
         
         self.telephone = telephone
         self.description = description
         super.init(username: programName, profileImage: profileImage, email: email, badges: badges)
     }
+    
+    
     
     func getTelephone() -> Int {
         return self.telephone

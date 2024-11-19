@@ -137,6 +137,8 @@ struct OrganizationView: View {
                     organization.setProfileImage(image: nil)
                 }
             })
+            
+            
         }
     }
 }

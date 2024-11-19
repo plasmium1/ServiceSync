@@ -9,20 +9,24 @@ import SwiftUI
 
 struct HomeScreen: View {
     
-    var postsList = placeholderPostArray
+    @State private var postsList = placeholderPostArray
     
     var body: some View {
         VStack {
             TopBar()
             
             ScrollView{
-                ForEach(postsList) { post in
-                    HomePostView(post: post)
+                ForEach($postsList) { $post in
+                    PostView(post: $post, contextUser: $post.postManager)
+                        .padding()
                 }
+                
             }
+            .offset(y: -17)
             
         }
         .ignoresSafeArea()
+        
     }
 }
 
