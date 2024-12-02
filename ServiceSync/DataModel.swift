@@ -223,17 +223,19 @@ class Post: Identifiable, Hashable, Equatable {
     var title: String
     var postImage: Image
     var postContent: String
+    var eventDate: String
     var location: String
     var likes: Int?
     var comments: [Comment]?
     var tags: [Tag]
     
-    init(postManager: ManagerUser, title: String, postImage: Image, postContent: String, location: String, likes: Int, comments: [Comment], tags: [Tag]) {
+    init(postManager: ManagerUser, title: String, postImage: Image, postContent: String, location: String, eventDate: String, likes: Int, comments: [Comment], tags: [Tag]) {
         self.postManager = postManager
         self.title = title
         self.postImage = postImage
         self.postContent = postContent
         self.location = location
+        self.eventDate = eventDate
         self.likes = likes
         self.comments = comments
         self.tags = tags
@@ -270,6 +272,11 @@ class Post: Identifiable, Hashable, Equatable {
     func getLocation() -> String {
         return self.location
     }
+    
+    func getEventDate() -> String {
+        return self.eventDate
+    }
+    
     
     func getLikes() -> Int {
         if let postLike = likes{
@@ -401,11 +408,11 @@ var placeholderManager = ManagerUser(programName: "WE Bracelets", email: "fakeem
 var placeholderManager2 = ManagerUser(programName: "Feed The People", email: "fakeemail@gmail.com", telephone: 7735504264, description: "Someone make a fake description to fill this space", profileImage: Image("profilePic"), website: nil, badges: achievementsArray)
 
 
-var placeholderPost1 = Post(postManager: placeholderManager, title: "WE Bracelets", postImage: Image("PlaceholderImageForPost"), postContent: "Hi everyone! We had an awesome first meeting for WE Bracelets. Looking forward to meeting more people. Please stop by next week for our Thursday meeting!", location: "Location", likes: 0, comments: [placeholderComment], tags: [placeholderTag])
+var placeholderPost1 = Post(postManager: placeholderManager, title: "WE Bracelets", postImage: Image("PlaceholderImageForPost"), postContent: "Hi everyone! We had an awesome first meeting for WE Bracelets. Looking forward to meeting more people. Please stop by next week for our Thursday meeting!", location: "Location", eventDate: "10/05/2006", likes: 0, comments: [placeholderComment], tags: [placeholderTag])
 
-var placeholderPost2 = Post(postManager: placeholderManager2, title: "Feed The People", postImage: Image("FeedThePeopleImage"), postContent: "Hi everyone! We had an awesome first meeting for Feed The People. Looking forward to meeting more people. Please stop by next week for our Thursday meeting!", location: "Location", likes: 0, comments: [placeholderComment], tags: [placeholderTag])
+var placeholderPost2 = Post(postManager: placeholderManager2, title: "Feed The People", postImage: Image("FeedThePeopleImage"), postContent: "Hi everyone! We had an awesome first meeting for Feed The People. Looking forward to meeting more people. Please stop by next week for our Thursday meeting!", location: "Location", eventDate: "10/05/2006", likes: 0, comments: [placeholderComment], tags: [placeholderTag])
 
-var placeholderPost3 = Post(postManager: placeholderManager2, title: "Nothing Here!", postImage: Image("ShruggingGuy"), postContent: "No results found", location: "Location", likes: 0, comments: [placeholderComment], tags: [placeholderTag])
+var placeholderPost3 = Post(postManager: placeholderManager2, title: "Nothing Here!", postImage: Image("ShruggingGuy"), postContent: "No results found", location: "Location", eventDate: "10/05/2006", likes: 0, comments: [placeholderComment], tags: [placeholderTag])
 
 var placeholderPostArray = [placeholderPost1, placeholderPost2, placeholderPost3]
 

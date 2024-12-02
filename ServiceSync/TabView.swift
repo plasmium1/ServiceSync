@@ -11,12 +11,13 @@ struct ContentView: View {
 enum Tab{
     case calendar, home, person, search
 }
-@State private var selectedTab: Tab = .home
+    @State private var selectedTab: Tab = .home
+    @EnvironmentObject var myEvents: EventStore
     
 var body: some View {
     TabView(selection: $selectedTab){
         
-        CalendarView()
+        EventsCalendarView()
             .tabItem {
                 Label("Calendar", systemImage: "calendar")
             }
@@ -47,4 +48,5 @@ var body: some View {
 
 #Preview {
     ContentView()
+        .environmentObject(EventStore())
 }
