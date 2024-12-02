@@ -10,6 +10,7 @@ import SwiftUI
 struct PostView: View {
     @Binding var post: Post // Binding to allow updates
     @Binding var contextUser: ManagerUser
+    @State private var navigateToForm = false
     
     init(post: Binding<Post>, contextUser: Binding<ManagerUser>) {
         self._post = post
@@ -39,27 +40,37 @@ struct PostView: View {
                 Text(post.getPostManager().getUsername())
                     .font(.headline)
             }
-
+            
             post.getPostImage()
                 .resizable()
                 .scaledToFill()
                 .frame(width: 400, height: 250)
                 .cornerRadius(10)
-
+            
             Text(post.getPostContent())
                 .font(.body)
                 .padding(.top, 5)
-
+            
             HStack {
                 Text("Location: \(post.getLocation())")
                     .font(.subheadline)
                     .foregroundColor(.gray)
                     .padding(.top, 2)
-
+                
                 Spacer()
             }
             .padding(.top, 10) // Add padding above location text
-
+            
+            HStack {
+                Text("Event Date: \(post.getEventDate())")
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+                    .padding(.top, 2)
+                
+                Spacer()
+            }
+            .padding(.top, 10) // Add padding above location text
+            
             HStack {
                 Button(action: {
                     withAnimation {
@@ -76,15 +87,29 @@ struct PostView: View {
                 }
                 Spacer()
                 
+                // NavigationLink for Sign-Up button
+                NavigationLink(value: post) {
+                    Text("Sign Up")
+                        .padding(.horizontal)
+                        .frame(height: 30)
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(5)
+                }
+                
+                
                 Image(systemName: "flag")
                     .resizable()
                     .frame(width: 20, height: 20)
                     .padding()
             }
-
+            
             Divider()
         }
         .padding()
+        .navigationDestination(for: Post.self) { post in
+            EventFormView(viewModel: EventFormViewModel())
+        }
     }
 }
 
