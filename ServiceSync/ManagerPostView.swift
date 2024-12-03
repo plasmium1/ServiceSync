@@ -16,8 +16,8 @@ struct ManagerPostView: View {
         NavigationView {
             ScrollView {
                 VStack {
-                    ForEach($posts) { $post in // Use binding to allow updates
-                        PostView(post: $post, contextUser: $contextUser)
+                    ForEach(posts) { post in // Use binding to allow updates
+                        PostView(post: post, contextUser: contextUser)
                     }
                     
                     // Add Post Button

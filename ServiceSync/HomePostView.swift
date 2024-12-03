@@ -36,6 +36,10 @@ struct HomePostView: View {
                     .padding()
                 
                 Divider()
+                
+                Text(post.eventDate)
+                    .padding()
+                
             }
         }
     }

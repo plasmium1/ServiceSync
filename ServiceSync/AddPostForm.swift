@@ -14,6 +14,7 @@ struct AddPostForm: View {
     @State private var title: String = ""
     @State private var description: String = ""
     @State private var location: String = ""
+    @State private var eventDate: String = ""
 
     var body: some View {
         VStack {
@@ -31,12 +32,13 @@ struct AddPostForm: View {
                 .padding()
 
             Button("Add Post") {
-                let newPost = Post(postManager: contextUser, title: title, postImage: Image("samplePhoto1"), postContent: description, location: location, likes: 0, comments: [], tags: [])
+                let newPost = Post(postManager: contextUser, title: title, postImage: Image("samplePhoto1"), postContent: description, location: location, eventDate: eventDate, likes: 0, comments: [], tags: [])
                 posts.append(newPost)
                 // Clear fields after adding
                 title = ""
                 description = ""
                 location = ""
+                eventDate = ""
             }
             .padding()
             .background(Color.green)

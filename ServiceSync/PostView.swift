@@ -8,12 +8,15 @@
 import SwiftUI
 
 struct PostView: View {
-    @Binding var post: Post // Binding to allow updates
-    @Binding var contextUser: ManagerUser
+    @State var post: Post // Binding to allow updates
+    @State var contextUser: ManagerUser
+    @State private var navigateToForm = false
+    @State var showReport = false
+    @State private var report: String = ""
     
-    init(post: Binding<Post>, contextUser: Binding<ManagerUser>) {
-        self._post = post
-        self._contextUser = contextUser
+    init(post: Post, contextUser: ManagerUser) {
+        self.post = post
+        self.contextUser = contextUser
     }
     
     var body: some View {
@@ -39,27 +42,53 @@ struct PostView: View {
                 Text(post.getPostManager().getUsername())
                     .font(.headline)
             }
-
+            
+            
+            HStack{
+                ForEach(post.getTags()){ tags in
+                    ZStack{
+                        RoundedRectangle(cornerRadius: 10)
+                            .foregroundColor( tags.getTypeColor())
+                        
+                        Text(tags.getName())
+                            .scaledToFit()
+                            
+                    }
+                    .frame(width:150)
+                }
+            }
+            
+            
             post.getPostImage()
                 .resizable()
                 .scaledToFill()
                 .frame(width: 400, height: 250)
                 .cornerRadius(10)
-
+            
             Text(post.getPostContent())
                 .font(.body)
-                .padding(.top, 5)
-
+                .padding()
+            
             HStack {
                 Text("Location: \(post.getLocation())")
                     .font(.subheadline)
                     .foregroundColor(.gray)
                     .padding(.top, 2)
-
+                
                 Spacer()
             }
             .padding(.top, 10) // Add padding above location text
-
+            
+            HStack {
+                Text("Event Date: \(post.getEventDate())")
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+                    .padding(.top, 2)
+                
+                Spacer()
+            }
+            .padding(.top, 10) // Add padding above location text
+            
             HStack {
                 Button(action: {
                     withAnimation {
@@ -76,15 +105,76 @@ struct PostView: View {
                 }
                 Spacer()
                 
-                Image(systemName: "flag")
-                    .resizable()
-                    .frame(width: 20, height: 20)
-                    .padding()
+                // NavigationLink for Sign-Up button
+                NavigationLink(value: post) {
+                    Text("Sign Up")
+                        .padding(.horizontal)
+                        .frame(height: 30)
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(5)
+                }
+                
+                
+                
+                
+                
+                Button(action: {
+                    withAnimation {
+                        showReport.toggle()
+                    }
+                }){
+                    Image(systemName: showReport ? "flag.fill" : "flag")
+                        .resizable()
+                        .frame(width: 20, height: 20)
+                        .padding()
+                        .foregroundColor(.red)
+                }
+                
+                
+//
             }
-
+            if showReport{
+                ZStack{
+                    
+                    RoundedRectangle(cornerRadius: 10)
+                        .foregroundColor(.topPink)
+                    
+                    VStack{
+                        Text("Tell us what's wrong?")
+                            .font(.title)
+                        
+                        TextField("Write your report here", text: $report)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .padding()
+                       
+                        
+                        ZStack{
+                            RoundedRectangle(cornerRadius: 10)
+                                .foregroundColor(.green)
+                                .frame(width:150, height: 50)
+                            
+                            Button("Submit Report"){
+                                post.reports?.append(report)
+                                report = ""
+                            }
+                            .padding()
+                            .foregroundColor(.black)
+                        }
+                        
+                    }
+                    .padding()
+                }
+                .padding()
+            }
+            
+            
             Divider()
         }
         .padding()
+        .navigationDestination(for: Post.self) { post in
+            EventFormView(viewModel: EventFormViewModel())
+        }
     }
 }
 
