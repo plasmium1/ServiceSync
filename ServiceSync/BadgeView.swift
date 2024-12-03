@@ -12,11 +12,19 @@ struct BadgeView: View {
     
     var body: some View {
         VStack {
-            Image(systemName: "star.fill") // Badge Icon (could be dynamic based on the badge)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 40, height: 40)
-                .foregroundColor(.yellow)
+            if let img = badge.getBadgeImage() {
+                Image(uiImage: img.withRenderingMode(.alwaysTemplate)) // Badge Icon (can be customized)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 40, height: 40)
+                    .foregroundStyle(Color.yellow)
+            } else {
+                Image(systemName: "star.fill")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 40, height: 40)
+                    .foregroundColor(Color.yellow)
+            }
             
             Text(badge.getName())
                 .font(.caption)
