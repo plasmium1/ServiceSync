@@ -20,6 +20,7 @@ struct OrganizationView: View {
     // Navigate to Edit Organization Profile Screen
     @State private var isEditingProfile = false
     
+    
     var body: some View {
         NavigationView {
             VStack {
@@ -28,7 +29,7 @@ struct OrganizationView: View {
                     // Organization Logo (Placeholder or Selected Image)
                     Group {
                         if let logo = organization.getProfileImage() {
-                            logo
+                            Image(uiImage: logo)
                                 .resizable()
                                 .scaledToFill()
                                 .frame(width: 100, height: 100)
@@ -118,8 +119,10 @@ struct OrganizationView: View {
                     
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack {
-                            ForEach(organization.getBadges()) { achievement in
-                                AchievementView(achievement: achievement)
+                            ForEach(organization.getBadges(), id: \.self) { badgeID in
+                                if let loadedAchievement = badgeLookUp(id: badgeID!) {
+                                    AchievementView(achievement: loadedAchievement)
+                                }
                             }
                         }
                     }
@@ -132,19 +135,23 @@ struct OrganizationView: View {
             .imagePicker(isPresented: $isImagePickerPresented, selectedImage: $selectedImage, onImageSelected: { image in
                 // Update organization logo after selection
                 if let img = image {
-                    organization.setProfileImage(image: Image(uiImage: img))
+                    organization.setProfileImage(image: img)
                 } else {
                     organization.setProfileImage(image: nil)
                 }
             })
-            
-            
+        }
+        .onAppear {
+            loadBadges { badges in
+                badgesArray = badges
+            }
         }
     }
 }
 
 struct OrganizationView_Previews: PreviewProvider {
     static var previews: some View {
-        OrganizationView(organization: placeholderManager)
+        
+        OrganizationView(organization: placeholderManager2)
     }
 }

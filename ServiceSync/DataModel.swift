@@ -9,28 +9,20 @@ import Foundation
 import SwiftUI
 
 
-class User: ObservableObject, Identifiable, Hashable, Equatable {
+class User: ObservableObject {
     @Published var username: String
     var id = UUID()
-    @Published var profileImage: Image?
+    @Published var profileImage: UIImage?
     @Published var liked: [UUID] = []
     @Published var email: String
-    @Published var badges: [Badge] = []
+    @Published var badges: [String?] = []
     
-    init(username: String, profileImage: Image?, email: String, badges: [Badge]) {
+    init(username: String, profileImage: UIImage?, email: String, badges: [String?]) {
         self.username = username
         self.profileImage = profileImage
         self.email = email
         self.badges = badges
     }
-    
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-     }
-    
-    static func ==(lhs: User, rhs: User) -> Bool {
-        return lhs.id == rhs.id
-        }
     
     func getUsername() -> String {
         return self.username
@@ -60,11 +52,11 @@ class User: ObservableObject, Identifiable, Hashable, Equatable {
         }
     }
     
-    func getProfileImage() -> Image? {
+    func getProfileImage() -> UIImage? {
         return self.profileImage!
     }
     
-    func setProfileImage(image: Image?) {
+    func setProfileImage(image: UIImage?) {
         self.profileImage = image
     }
     
@@ -72,29 +64,27 @@ class User: ObservableObject, Identifiable, Hashable, Equatable {
         self.email = email
     }
     
-    func getBadges() -> [Badge] {
+    func getBadges() -> [String?] {
         return self.badges
     }
     
-    func earnBadge(badgeID: UUID) {
+    func earnBadge(badgeID: String) {
         for badge in 0...badges.count {
             if (badgesArray[badge].getID() == badgeID) {
-                badges.append(badgesArray[badge])
+                badges.append(badgesArray[badge].getID())
             }
         }
     }
-    
-    
 }
 
 class StudentUser: User {
     @Published var name: String
-    var interests: [Tag]
+    var interests: [UUID]?
     var aboutMe: String = ""
     @Published var age: Int
     
     
-    init(name: String, username: String, age: Int, interests: [Tag], aboutMe: String, email: String, profileImage: Image?, badges: [Badge]) {
+    init(name: String, username: String, age: Int, interests: [UUID]?, aboutMe: String, email: String, profileImage: UIImage?, badges: [String]) {
         self.name = name
         self.age = age
         self.interests = interests
@@ -110,8 +100,8 @@ class StudentUser: User {
         return self.age
     }
     
-    func getInterests() -> [Tag] {
-        return self.interests
+    func getInterests() -> [UUID]? {
+        return self.interests!
     }
 }
 
@@ -122,15 +112,12 @@ class ManagerUser: User {
     @Published var website: String?
     
     
-    
-    init(programName: String, email: String, telephone: Int, description: String, profileImage: Image, website: String?, badges: [Badge]) {
+    init(programName: String, email: String, telephone: Int, description: String, profileImage: UIImage?, website: String?, badges: [String?]) {
         
         self.telephone = telephone
         self.description = description
         super.init(username: programName, profileImage: profileImage, email: email, badges: badges)
     }
-    
-    
     
     func getTelephone() -> Int {
         return self.telephone
@@ -171,7 +158,7 @@ class ManagerUser: User {
     
 }
 
-class Tag: Identifiable, Hashable, Equatable {
+class Tag: Identifiable {
     var name: String
     var type: String
     var id = UUID()
@@ -181,20 +168,16 @@ class Tag: Identifiable, Hashable, Equatable {
         self.type = type
     }
     
-    static func ==(lhs: Tag, rhs: Tag) -> Bool {
-            return lhs.name == rhs.name
-        }
-    
-    func hash(into hasher: inout Hasher) {
-       hasher.combine(name)
-     }
-    
     func getName() -> String {
         return self.name
     }
     
     func getType() -> String {
         return self.type
+    }
+    
+    func getID() -> UUID {
+        return self.id
     }
     
     func getTypeColor() -> Color {
@@ -241,14 +224,6 @@ class Post: Identifiable, Hashable, Equatable, ObservableObject {
         self.comments = comments
         self.tags = tags
     }
-    
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-     }
-    
-    static func ==(lhs: Post, rhs: Post) -> Bool {
-        return lhs.id == rhs.id
-        }
     
     func getPostManager() -> ManagerUser {
         return self.postManager
@@ -359,24 +334,38 @@ class Comment {
 }
 
 class Badge: Identifiable {
+    enum BadgeImageType {
+        case system(name: String)
+        case uploaded(url: String)
+        
+        var systemName: String? {
+            if case let .system(name) = self {
+                return name
+            }
+            return nil
+        }
+    }
+
     var name: String
-    var badgeImage: Image
-    var id = UUID()
-    
-    init(name: String, badgeImage: Image) {
+    var badgeImageType: BadgeImageType
+    var id: String
+
+    init(name: String, badgeImageType: BadgeImageType, id: String) {
         self.name = name
-        self.badgeImage = badgeImage
+        self.badgeImageType = badgeImageType
+        self.id = id
     }
     
     func getName() -> String {
         return self.name
     }
     
-    func getBadgeImage() -> Image {
-        return self.badgeImage
+    func getBadgeImageType() -> BadgeImageType {
+        return self.badgeImageType
     }
     
-    func getID() -> UUID {
+    
+    func getID() -> String {
         return self.id
     }
     
@@ -384,29 +373,37 @@ class Badge: Identifiable {
         self.name = name
     }
     
-    func setBadgeImage(badgeImage: Image) {
-        self.badgeImage = badgeImage
+    func getBadgeImage() -> UIImage? {
+        switch self.badgeImageType {
+        case .system(let systemName):
+            return UIImage(systemName: systemName)?.withTintColor(.yellow)
+        case .uploaded(let url):
+            if let url = URL(string: url), let data = try? Data(contentsOf: url) {
+                return UIImage(data: data)
+            }
+            return nil
+        }
     }
 }
 
-var placeholderTag = Tag(name: "Civic Engagement", type: "Civic Engagement")
+func badgeLookUp(id: String) -> Badge? {
+    for badge in badgesArray {
+        if badge.getID() == id {
+            return badge
+        }
+    }
+    return nil
+}
 
-var placeholderTag2 = Tag(name: "Tech", type: "Tech")
+var placeholderTag = Tag(name: "Making placeholders", type: "Civic Engagement")
 
-var placeholderTag3 = Tag(name: "Arts", type: "Arts")
-
-var placeholderTag4 = Tag(name: "Sports", type: "Sports")
-
-var placeholderTagsArray = [placeholderTag, placeholderTag2,placeholderTag3, placeholderTag4]
-
-
-var placeholderStudent = StudentUser(name: "Alex Konwar", username: "AKonwar", age: 17, interests: [placeholderTag], aboutMe: "I just love making placeholders", email: "fakeemail@gmail.com", profileImage: Image("profilePic"), badges: badgesArray)
+var placeholderStudent = StudentUser(name: "Alex Konwar", username: "AKonwar", age: 17, interests: [placeholderTag.getID()], aboutMe: "I just love making placeholders", email: "fakeemail@gmail.com", profileImage: UIImage(named:"profilePic"), badges: ["completed_challenge", "volunteered_5_times", "volunteered_10_times", "stand_out"])
 
 var placeholderComment = Comment(postUser: placeholderStudent, content: "Cool!", likes: 0)
 
-var placeholderManager = ManagerUser(programName: "WE Bracelets", email: "fakeemail@gmail.com", telephone: 7735504264, description: "Someone make a fake description to fill this space", profileImage: Image("profilePic"), website: "examplewebsite.com", badges: achievementsArray)
+var placeholderManager = ManagerUser(programName: "WE Bracelets", email: "fakeemail@gmail.com", telephone: 7735504264, description: "Someone make a fake description to fill this space", profileImage: UIImage(named:"profilePic"), website: "examplewebsite.com", badges: ["first_product"])
 
-var placeholderManager2 = ManagerUser(programName: "Feed The People", email: "fakeemail@gmail.com", telephone: 7735504264, description: "Someone make a fake description to fill this space", profileImage: Image("profilePic"), website: nil, badges: achievementsArray)
+var placeholderManager2 = ManagerUser(programName: "Feed The People", email: "fakeemail@gmail.com", telephone: 7735504264, description: "Someone make a fake description to fill this space", profileImage: UIImage(named:"profilePic"), website: nil, badges: ["first_product", "best_startup"])
 
 
 var placeholderPost1 = Post(postManager: placeholderManager, title: "WE Bracelets", postImage: Image("PlaceholderImageForPost"), postContent: "Hi everyone! We had an awesome first meeting for WE Bracelets. Looking forward to meeting more people. Please stop by next week for our Thursday meeting!", location: "Location", eventDate: "10/05/2006", likes: 0, comments: [placeholderComment], tags: [placeholderTag])
@@ -417,25 +414,14 @@ var placeholderPost3 = Post(postManager: placeholderManager2, title: "Nothing He
 
 var placeholderPostArray = [placeholderPost1, placeholderPost2, placeholderPost3]
 
-var badgesArray: [Badge] = [
-    Badge(name:"Completed Challenge", badgeImage: Image(systemName: "star.fill")),
-    Badge(name: "Volunteer 5 Times", badgeImage: Image(systemName: "star.fill")),
-    Badge(name: "Volunteer 10 Times", badgeImage: Image(systemName: "star.fill")),
-    Badge(name: "Stand Out", badgeImage: Image(systemName: "star.fill"))
-]
 
-var achievementsArray: [Badge] = [
-    Badge(name: "First Product Launch", badgeImage: Image(systemName: "star.fill")),
-    Badge(name: "Awarded Best Startup", badgeImage: Image(systemName: "star.fill"))
+var badgesArray: [Badge] = [
+    Badge(name: "Completed Challenge", badgeImageType: .system(name: "star.fill"), id: "completed_challenge"),
+    Badge(name: "Volunteer 5 Times", badgeImageType: .system(name: "star.fill"), id: "volunteered_5_times"),
+    Badge(name: "Volunteer 10 Times", badgeImageType: .system(name: "star.fill"), id: "volunteered_10_times"),
+    Badge(name: "Stand Out", badgeImageType: .system(name: "star.fill"), id: "stand_out"),
+    Badge(name: "First Product Launch", badgeImageType: .system(name: "star.fill"), id: "first_product"),
+    Badge(name: "Awarded Best Startup", badgeImageType: .system(name: "star.fill"), id: "best_startup")
 ]
 
 var studentArray: [StudentUser] = [placeholderStudent]
-
-var filters: [Bool] {
-    var results = [false]
-    
-    (2...placeholderTagsArray.count) .forEach{ tag in
-        results.append(false)
-    }
-    return results
-}

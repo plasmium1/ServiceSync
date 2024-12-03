@@ -26,7 +26,7 @@ struct VolunteerView: View {
                     // Profile Picture (Placeholder or Selected Image)
                     Group {
                         if let profileImage = user.getProfileImage() {
-                            profileImage
+                            Image(uiImage: profileImage)
                                 .resizable()
                                 .scaledToFill()
                                 .frame(width: 100, height: 100)
@@ -39,7 +39,7 @@ struct VolunteerView: View {
                                 .overlay(
                                     Text(user.username.prefix(1)) // First letter of username as placeholder
                                         .font(.largeTitle)
-                                        .foregroundColor(.white)
+                                        .foregroundStyle(Color.white)
                                 )
                         }
                     }
@@ -102,8 +102,10 @@ struct VolunteerView: View {
                     
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack {
-                            ForEach(user.getBadges()) { badge in
-                                BadgeView(badge: badge)
+                            ForEach(user.getBadges(), id: \.self) { badgeID in
+                                if let loadedAchievement = badgeLookUp(id: badgeID!) {
+                                    AchievementView(achievement: loadedAchievement)
+                                }
                             }
                             
                         }
@@ -117,7 +119,7 @@ struct VolunteerView: View {
             .imagePicker(isPresented: $isImagePickerPresented, selectedImage: $selectedImage, onImageSelected: { selectedImage in
                 // Update profile image after selection
                 if let img = selectedImage {
-                    user.setProfileImage(image: Image(uiImage: img))
+                    user.setProfileImage(image: img)
                 } else {
                     user.setProfileImage(image: nil)
                 }

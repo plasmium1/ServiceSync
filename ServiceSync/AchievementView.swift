@@ -12,12 +12,19 @@ struct AchievementView: View {
     
     var body: some View {
         VStack {
-            achievement.getBadgeImage() // Achievement Icon (can be customized)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 40, height: 40)
-                .foregroundColor(.yellow)
-            
+            if let img = achievement.getBadgeImage() {
+                Image(uiImage: img.withRenderingMode(.alwaysTemplate)) // Achievement Icon (can be customized)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 40, height: 40)
+                    .foregroundStyle(Color.yellow)
+            } else {
+                Image(systemName: "star.fill")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 40, height: 40)
+                    .foregroundStyle(Color.yellow)
+            }
             Text(achievement.getName())
                 .font(.caption)
                 .padding(.top, 5)

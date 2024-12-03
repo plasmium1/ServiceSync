@@ -32,7 +32,7 @@ struct EditVolunteerProfileView: View {
                     if !newEmail.isEmpty {
                         user.setEmail(email: newEmail)
                     }
-                    
+                    uploadStudentUser(user)
                     // Close the sheet after saving
                     dismiss()
                 }
