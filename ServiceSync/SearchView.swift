@@ -114,14 +114,22 @@ struct SearchView: View {
                     
                     
                     VStack {
-                        Button("Search Options") {
-                            withAnimation {
-                                isDisclosed.toggle()
+                        ZStack{
+                            RoundedRectangle(cornerRadius: 10)
+                                .frame(width:170, height: 50)
+                                .foregroundColor(.green)
+                            
+                            Button("Search Options") {
+                                withAnimation {
+                                    isDisclosed.toggle()
+                                }
                             }
+                            .buttonStyle(.plain)
+                            .font(.title3)
+                            .padding()
+                            
                         }
-                        .buttonStyle(.plain)
-                        .font(.title3)
-                                
+                        .padding()
                         VStack {
                             VStack{
                                 VStack(){
@@ -257,7 +265,7 @@ struct SearchView: View {
                     // List of filtered results
                     ScrollView{
                         ForEach(filteredItems) { post in
-                            HomePostView(post: post)
+                            PostView(post: post, contextUser: post.postManager)
                         }
                     }
                     .listStyle(PlainListStyle())

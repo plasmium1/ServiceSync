@@ -8,13 +8,15 @@
 import SwiftUI
 
 struct PostView: View {
-    @Binding var post: Post // Binding to allow updates
-    @Binding var contextUser: ManagerUser
+    @State var post: Post // Binding to allow updates
+    @State var contextUser: ManagerUser
     @State private var navigateToForm = false
+    @State var showReport = false
+    @State private var report: String = ""
     
-    init(post: Binding<Post>, contextUser: Binding<ManagerUser>) {
-        self._post = post
-        self._contextUser = contextUser
+    init(post: Post, contextUser: ManagerUser) {
+        self.post = post
+        self.contextUser = contextUser
     }
     
     var body: some View {
@@ -41,6 +43,22 @@ struct PostView: View {
                     .font(.headline)
             }
             
+            
+            HStack{
+                ForEach(post.getTags()){ tags in
+                    ZStack{
+                        RoundedRectangle(cornerRadius: 10)
+                            .foregroundColor( tags.getTypeColor())
+                        
+                        Text(tags.getName())
+                            .scaledToFit()
+                            
+                    }
+                    .frame(width:150)
+                }
+            }
+            
+            
             post.getPostImage()
                 .resizable()
                 .scaledToFill()
@@ -49,7 +67,7 @@ struct PostView: View {
             
             Text(post.getPostContent())
                 .font(.body)
-                .padding(.top, 5)
+                .padding()
             
             HStack {
                 Text("Location: \(post.getLocation())")
@@ -98,11 +116,58 @@ struct PostView: View {
                 }
                 
                 
-                Image(systemName: "flag")
-                    .resizable()
-                    .frame(width: 20, height: 20)
-                    .padding()
+                
+                
+                
+                Button(action: {
+                    withAnimation {
+                        showReport.toggle()
+                    }
+                }){
+                    Image(systemName: showReport ? "flag.fill" : "flag")
+                        .resizable()
+                        .frame(width: 20, height: 20)
+                        .padding()
+                        .foregroundColor(.red)
+                }
+                
+                
+//
             }
+            if showReport{
+                ZStack{
+                    
+                    RoundedRectangle(cornerRadius: 10)
+                        .foregroundColor(.topPink)
+                    
+                    VStack{
+                        Text("Tell us what's wrong?")
+                            .font(.title)
+                        
+                        TextField("Write your report here", text: $report)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .padding()
+                       
+                        
+                        ZStack{
+                            RoundedRectangle(cornerRadius: 10)
+                                .foregroundColor(.green)
+                                .frame(width:150, height: 50)
+                            
+                            Button("Submit Report"){
+                                post.reports?.append(report)
+                                report = ""
+                            }
+                            .padding()
+                            .foregroundColor(.black)
+                        }
+                        
+                    }
+                    .padding()
+                }
+                .padding()
+            }
+            
             
             Divider()
         }

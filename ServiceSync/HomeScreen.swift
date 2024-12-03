@@ -16,8 +16,8 @@ struct HomeScreen: View {
             TopBar()
             
             ScrollView{
-                ForEach($postsList) { $post in
-                    PostView(post: $post, contextUser: $post.postManager)
+                ForEach(postsList) { post in
+                    PostView(post: post, contextUser: post.postManager)
                         .padding()
                 }
                 

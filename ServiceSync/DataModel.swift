@@ -217,17 +217,18 @@ class Tag: Identifiable, Hashable, Equatable {
     }
 }
 
-class Post: Identifiable, Hashable, Equatable {
-    var postManager: ManagerUser
-    var id = UUID()
-    var title: String
-    var postImage: Image
-    var postContent: String
-    var eventDate: String
-    var location: String
-    var likes: Int?
-    var comments: [Comment]?
-    var tags: [Tag]
+class Post: Identifiable, Hashable, Equatable, ObservableObject {
+    @Published var postManager: ManagerUser
+    @Published var id = UUID()
+    @Published var title: String
+    @Published var postImage: Image
+    @Published var postContent: String
+    @Published var eventDate: String
+    @Published var location: String
+    @Published var likes: Int?
+    @Published var comments: [Comment]?
+    @Published var tags: [Tag]
+    @Published var reports: [String]?
     
     init(postManager: ManagerUser, title: String, postImage: Image, postContent: String, location: String, eventDate: String, likes: Int, comments: [Comment], tags: [Tag]) {
         self.postManager = postManager
@@ -412,7 +413,7 @@ var placeholderPost1 = Post(postManager: placeholderManager, title: "WE Bracelet
 
 var placeholderPost2 = Post(postManager: placeholderManager2, title: "Feed The People", postImage: Image("FeedThePeopleImage"), postContent: "Hi everyone! We had an awesome first meeting for Feed The People. Looking forward to meeting more people. Please stop by next week for our Thursday meeting!", location: "Location", eventDate: "10/05/2006", likes: 0, comments: [placeholderComment], tags: [placeholderTag])
 
-var placeholderPost3 = Post(postManager: placeholderManager2, title: "Nothing Here!", postImage: Image("ShruggingGuy"), postContent: "No results found", location: "Location", eventDate: "10/05/2006", likes: 0, comments: [placeholderComment], tags: [placeholderTag])
+var placeholderPost3 = Post(postManager: placeholderManager2, title: "Nothing Here!", postImage: Image("FeedThePeopleImage"), postContent: "No results found", location: "Location", eventDate: "10/05/2006", likes: 0, comments: [placeholderComment], tags: [placeholderTag])
 
 var placeholderPostArray = [placeholderPost1, placeholderPost2, placeholderPost3]
 
