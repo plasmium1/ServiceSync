@@ -158,7 +158,7 @@ class ManagerUser: User {
     
 }
 
-class Tag: Identifiable {
+class Tag: Identifiable, Hashable, Equatable {
     var name: String
     var type: String
     var id = UUID()
@@ -167,6 +167,14 @@ class Tag: Identifiable {
         self.name = name
         self.type = type
     }
+    
+    static func ==(lhs: Tag, rhs: Tag) -> Bool {
+            return lhs.name == rhs.name
+        }
+    
+    func hash(into hasher: inout Hasher) {
+       hasher.combine(name)
+     }
     
     func getName() -> String {
         return self.name
@@ -224,6 +232,14 @@ class Post: Identifiable, Hashable, Equatable, ObservableObject {
         self.comments = comments
         self.tags = tags
     }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+     }
+    
+    static func ==(lhs: Post, rhs: Post) -> Bool {
+        return lhs.id == rhs.id
+        }
     
     func getPostManager() -> ManagerUser {
         return self.postManager
@@ -395,7 +411,16 @@ func badgeLookUp(id: String) -> Badge? {
     return nil
 }
 
-var placeholderTag = Tag(name: "Making placeholders", type: "Civic Engagement")
+var placeholderTag = Tag(name: "Civic Engagement", type: "Civic Engagement")
+
+var placeholderTag2 = Tag(name: "Tech", type: "Tech")
+
+var placeholderTag3 = Tag(name: "Arts", type: "Arts")
+
+var placeholderTag4 = Tag(name: "Sports", type: "Sports")
+
+var placeholderTagsArray = [placeholderTag, placeholderTag2,placeholderTag3, placeholderTag4]
+
 
 var placeholderStudent = StudentUser(name: "Alex Konwar", username: "AKonwar", age: 17, interests: [placeholderTag.getID()], aboutMe: "I just love making placeholders", email: "fakeemail@gmail.com", profileImage: UIImage(named:"profilePic"), badges: ["completed_challenge", "volunteered_5_times", "volunteered_10_times", "stand_out"])
 
@@ -425,3 +450,13 @@ var badgesArray: [Badge] = [
 ]
 
 var studentArray: [StudentUser] = [placeholderStudent]
+
+var filters: [Bool] {
+    var results = [false]
+    
+    (2...placeholderTagsArray.count) .forEach{ tag in
+        results.append(false)
+    }
+    return results
+}
+
