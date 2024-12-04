@@ -23,7 +23,7 @@ struct PostView: View {
         VStack(alignment: .leading) {
             HStack {
                 if let logo = post.getPostManager().getProfileImage() {
-                    logo
+                    Image(uiImage: logo)
                         .resizable()
                         .scaledToFill()
                         .frame(width: 100, height: 100)
@@ -177,6 +177,8 @@ struct PostView: View {
         }
     }
 }
+
+
 
 //#Preview {
 //    PostView(post: placeholderPost1, contextUser: placeholderManager)
