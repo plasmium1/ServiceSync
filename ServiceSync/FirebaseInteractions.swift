@@ -496,6 +496,13 @@ func loadPost(postID: String, completion: @escaping (Result<Post, Error>) -> Voi
             return
         }
         
+        // Deserialize comments safely
+        let commentsData = data["comments"] as? [Any]
+        let comments: [Comment] = commentsData?.compactMap {
+            guard let commentDict = $0 as? [String: Any] else { return nil }
+            return Comment.fromDictionary(commentDict)
+        } ?? []
+        
         // Download image
         let imageRef = storage.child(postImageURL)
         imageRef.getData(maxSize: 5 * 1024 * 1024) { data, error in
@@ -509,9 +516,8 @@ func loadPost(postID: String, completion: @escaping (Result<Post, Error>) -> Voi
                 return
             }
             
-            // Deserialize tags and comments
+            // Deserialize tags
             let tags = tagsData.compactMap { Tag.fromDictionary($0) }
-            let comments = (data["comments"] as? [[String: Any]])?.compactMap { Comment.fromDictionary($0) } ?? []
             
             // Create Post object
             let post = Post(postManager: postManagerID, title: title, postImage: postImage, postContent: postContent, location: location, eventDate: eventDate, likes: likes, comments: comments, tags: tags)
@@ -520,26 +526,29 @@ func loadPost(postID: String, completion: @escaping (Result<Post, Error>) -> Voi
     }
 }
 
+
 extension Comment {
     func toDictionary() -> [String: Any] {
-        return ["content": content, "author": author]
+        return ["postUser": postUser, "content": content, "likes": likes]
     }
     
     static func fromDictionary(_ dictionary: [String: Any]) -> Comment? {
-        guard let content = dictionary["content"] as? String,
-              let author = dictionary["author"] as? String else { return nil }
-        return Comment(postUser: <#T##StudentUser#>, content: <#T##String#>, likes: <#T##Int#>)
+        guard let postUser = dictionary["postUser"] as? String,
+              let content = dictionary["content"] as? String,
+              let likes = dictionary["likes"] as? Int else { return nil }
+        return Comment(postUser: postUser, content: content, likes: likes)
     }
 }
 
 extension Tag {
     func toDictionary() -> [String: Any] {
-        return ["name": name]
+        return ["name": name, "type": type]
     }
     
     static func fromDictionary(_ dictionary: [String: Any]) -> Tag? {
-        guard let name = dictionary["name"] as? String else { return nil }
-        return Tag(name: name)
+        guard let name = dictionary["name"] as? String,
+              let type = dictionary["type"] as? String else { return nil }
+        return Tag(name: name, type: type)
     }
 }
 
