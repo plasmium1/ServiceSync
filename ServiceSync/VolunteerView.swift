@@ -129,8 +129,8 @@ struct VolunteerView: View {
     }
 }
 
-struct VolunteerView_Previews: PreviewProvider {
-    static var previews: some View {
-        VolunteerView(user: placeholderStudent)
-    }
-}
+//struct VolunteerView_Previews: PreviewProvider {
+//    static var previews: some View {
+//        VolunteerView(user: placeholderStudent)
+//    }
+//}

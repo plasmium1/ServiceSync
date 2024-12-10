@@ -28,7 +28,7 @@ struct HomePostView: View {
                     
                     
                 }
-                post.postImage
+                post.getPostImage()
                     .resizable()
                     .frame(width:410, height:350)
                 
@@ -45,6 +45,6 @@ struct HomePostView: View {
     }
 }
 
-#Preview {
-    HomePostView(post: placeholderPost1)
-}
+//#Preview {
+//    HomePostView(post: placeholderPost1)
+//}

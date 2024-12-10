@@ -11,14 +11,17 @@ import SwiftUI
 
 class User: ObservableObject {
     @Published var username: String
-    var id = UUID()
+    var role: String
+    var id: String
     @Published var profileImage: UIImage?
     @Published var liked: [UUID] = []
     @Published var email: String
     @Published var badges: [String?] = []
     
-    init(username: String, profileImage: UIImage?, email: String, badges: [String?]) {
+    init(username: String, role: String, id: String, profileImage: UIImage?, email: String, badges: [String?]) {
         self.username = username
+        self.role = role
+        self.id = id
         self.profileImage = profileImage
         self.email = email
         self.badges = badges
@@ -28,9 +31,14 @@ class User: ObservableObject {
         return self.username
     }
     
-    func getID() -> UUID {
+    func getID() -> String {
         return self.id
     }
+    
+    func setID(id: String) {
+        self.id = id
+    }
+    
     func getEmail() -> String {
         return self.email
     }
@@ -53,7 +61,7 @@ class User: ObservableObject {
     }
     
     func getProfileImage() -> UIImage? {
-        return self.profileImage!
+        return self.profileImage
     }
     
     func setProfileImage(image: UIImage?) {
@@ -84,12 +92,12 @@ class StudentUser: User {
     @Published var age: Int
     
     
-    init(name: String, username: String, age: Int, interests: [UUID]?, aboutMe: String, email: String, profileImage: UIImage?, badges: [String]) {
+    init(name: String, username: String, id: String, age: Int, interests: [UUID]?, aboutMe: String, email: String, profileImage: UIImage?, badges: [String]) {
         self.name = name
         self.age = age
         self.interests = interests
         self.aboutMe = aboutMe
-        super.init(username: username, profileImage: profileImage, email: email, badges: badges)
+        super.init(username: username, role: "student", id: id, profileImage: profileImage, email: email, badges: badges)
     }
     
     func getName() -> String {
@@ -108,15 +116,15 @@ class StudentUser: User {
 class ManagerUser: User {
     @Published var telephone: Int
     @Published var description: String
-    @Published var registeredStudents: [UUID] = []
+    @Published var registeredStudents: [String] = []
     @Published var website: String?
     
     
-    init(programName: String, email: String, telephone: Int, description: String, profileImage: UIImage?, website: String?, badges: [String?]) {
+    init(programName: String, id: String, email: String, telephone: Int, description: String, profileImage: UIImage?, website: String?, badges: [String?]) {
         
         self.telephone = telephone
         self.description = description
-        super.init(username: programName, profileImage: profileImage, email: email, badges: badges)
+        super.init(username: programName, role: "manager", id: id, profileImage: profileImage, email: email, badges: badges)
     }
     
     func getTelephone() -> Int {
@@ -209,10 +217,10 @@ class Tag: Identifiable, Hashable, Equatable {
 }
 
 class Post: Identifiable, Hashable, Equatable, ObservableObject {
-    @Published var postManager: ManagerUser
+    @Published var postManagerID: String
     @Published var id = UUID()
     @Published var title: String
-    @Published var postImage: Image
+    @Published var postImage: UIImage
     @Published var postContent: String
     @Published var eventDate: String
     @Published var location: String
@@ -221,8 +229,8 @@ class Post: Identifiable, Hashable, Equatable, ObservableObject {
     @Published var tags: [Tag]
     @Published var reports: [String]?
     
-    init(postManager: ManagerUser, title: String, postImage: Image, postContent: String, location: String, eventDate: String, likes: Int, comments: [Comment], tags: [Tag]) {
-        self.postManager = postManager
+    init(postManager: String, title: String, postImage: UIImage, postContent: String, location: String, eventDate: String, likes: Int, comments: [Comment], tags: [Tag]) {
+        self.postManagerID = postManager
         self.title = title
         self.postImage = postImage
         self.postContent = postContent
@@ -241,8 +249,16 @@ class Post: Identifiable, Hashable, Equatable, ObservableObject {
         return lhs.id == rhs.id
         }
     
-    func getPostManager() -> ManagerUser {
-        return self.postManager
+    func getPostManager(completion: @escaping (ManagerUser?) -> Void) {
+        loadManagerUser(userID: postManagerID) { result in
+            switch result {
+            case .success(let manager):
+                completion(manager)
+            case .failure(let error):
+                print("Load manager failed \(error)")
+                completion(nil)
+            }
+        }
     }
     
     func getID() -> UUID {
@@ -254,7 +270,7 @@ class Post: Identifiable, Hashable, Equatable, ObservableObject {
     }
     
     func getPostImage() -> Image {
-        return self.postImage
+        return Image(uiImage:self.postImage)
     }
     
     func getPostContent() -> String {
@@ -284,7 +300,7 @@ class Post: Identifiable, Hashable, Equatable, ObservableObject {
             return postComments
         }
         else{
-            return [placeholderComment]
+            return []
         }
     }
     
@@ -308,7 +324,7 @@ class Post: Identifiable, Hashable, Equatable, ObservableObject {
         self.title = title
     }
     
-    func setPostImage(image: Image) {
+    func setPostImage(image: UIImage) {
         self.postImage = image
     }
     
@@ -318,17 +334,18 @@ class Post: Identifiable, Hashable, Equatable, ObservableObject {
 }
 
 class Comment {
-    var postUser: StudentUser
+    var postUser: String
     var content: String
     var likes: Int
     
-    init(postUser: StudentUser, content: String, likes: Int) {
+    init(postUser: String, content: String, likes: Int) {
         self.postUser = postUser
         self.content = content
         self.likes = likes
     }
     
     func getUser() -> StudentUser {
+        
         return self.postUser
     }
     
@@ -422,22 +439,22 @@ var placeholderTag4 = Tag(name: "Sports", type: "Sports")
 var placeholderTagsArray = [placeholderTag, placeholderTag2,placeholderTag3, placeholderTag4]
 
 
-var placeholderStudent = StudentUser(name: "Alex Konwar", username: "AKonwar", age: 17, interests: [placeholderTag.getID()], aboutMe: "I just love making placeholders", email: "fakeemail@gmail.com", profileImage: UIImage(named:"profilePic"), badges: ["completed_challenge", "volunteered_5_times", "volunteered_10_times", "stand_out"])
+//var placeholderStudent = StudentUser(name: "Alex Konwar", username: "AKonwar", age: 17, interests: [placeholderTag.getID()], aboutMe: "I just love making placeholders", email: "fakeemail@gmail.com", profileImage: UIImage(named:"profilePic"), badges: ["completed_challenge", "volunteered_5_times", "volunteered_10_times", "stand_out"])
 
-var placeholderComment = Comment(postUser: placeholderStudent, content: "Cool!", likes: 0)
+//var placeholderComment = Comment(postUser: placeholderStudent, content: "Cool!", likes: 0)
 
-var placeholderManager = ManagerUser(programName: "WE Bracelets", email: "fakeemail@gmail.com", telephone: 7735504264, description: "Someone make a fake description to fill this space", profileImage: UIImage(named:"profilePic"), website: "examplewebsite.com", badges: ["first_product"])
+//var placeholderManager = ManagerUser(programName: "WE Bracelets", email: "fakeemail@gmail.com", telephone: 7735504264, description: "Someone make a fake description to fill this space", profileImage: UIImage(named:"profilePic"), website: "examplewebsite.com", badges: ["first_product"])
 
-var placeholderManager2 = ManagerUser(programName: "Feed The People", email: "fakeemail@gmail.com", telephone: 7735504264, description: "Someone make a fake description to fill this space", profileImage: UIImage(named:"profilePic"), website: nil, badges: ["first_product", "best_startup"])
+//var placeholderManager2 = ManagerUser(programName: "Feed The People", email: "fakeemail@gmail.com", telephone: 7735504264, description: "Someone make a fake description to fill this space", profileImage: UIImage(named:"profilePic"), website: nil, badges: ["first_product", "best_startup"])
 
 
-var placeholderPost1 = Post(postManager: placeholderManager, title: "WE Bracelets", postImage: Image("PlaceholderImageForPost"), postContent: "Hi everyone! We had an awesome first meeting for WE Bracelets. Looking forward to meeting more people. Please stop by next week for our Thursday meeting!", location: "Location", eventDate: "10/05/2006", likes: 0, comments: [placeholderComment], tags: [placeholderTag])
+//var placeholderPost1 = Post(postManager: placeholderManager.getID(), title: "WE Bracelets", postImage: UIImage(named:"PlaceholderImageForPost")!, postContent: "Hi everyone! We had an awesome first meeting for WE Bracelets. Looking forward to meeting more people. Please stop by next week for our Thursday meeting!", location: "Location", eventDate: "10/05/2006", likes: 0, comments: [placeholderComment], tags: [placeholderTag])
+//
+//var placeholderPost2 = Post(postManager: placeholderManager2.getID(), title: "Feed The People", postImage: UIImage(named:"FeedThePeopleImage")!, postContent: "Hi everyone! We had an awesome first meeting for Feed The People. Looking forward to meeting more people. Please stop by next week for our Thursday meeting!", location: "Location", eventDate: "10/05/2006", likes: 0, comments: [placeholderComment], tags: [placeholderTag])
+//
+//var placeholderPost3 = Post(postManager: placeholderManager2.getID(), title: "Nothing Here!", postImage: UIImage(named:"FeedThePeopleImage")!, postContent: "No results found", location: "Location", eventDate: "10/05/2006", likes: 0, comments: [placeholderComment], tags: [placeholderTag])
 
-var placeholderPost2 = Post(postManager: placeholderManager2, title: "Feed The People", postImage: Image("FeedThePeopleImage"), postContent: "Hi everyone! We had an awesome first meeting for Feed The People. Looking forward to meeting more people. Please stop by next week for our Thursday meeting!", location: "Location", eventDate: "10/05/2006", likes: 0, comments: [placeholderComment], tags: [placeholderTag])
-
-var placeholderPost3 = Post(postManager: placeholderManager2, title: "Nothing Here!", postImage: Image("FeedThePeopleImage"), postContent: "No results found", location: "Location", eventDate: "10/05/2006", likes: 0, comments: [placeholderComment], tags: [placeholderTag])
-
-var placeholderPostArray = [placeholderPost1, placeholderPost2, placeholderPost3]
+var placeholderPostArray: [Post] = []
 
 
 var badgesArray: [Badge] = [
@@ -449,7 +466,7 @@ var badgesArray: [Badge] = [
     Badge(name: "Awarded Best Startup", badgeImageType: .system(name: "star.fill"), id: "best_startup")
 ]
 
-var studentArray: [StudentUser] = [placeholderStudent]
+//var studentArray: [StudentUser] = [placeholderStudent]
 
 var filters: [Bool] {
     var results = [false]
@@ -460,3 +477,16 @@ var filters: [Bool] {
     return results
 }
 
+var managerDictionary: [String: ManagerUser] = [:]
+
+func fetchManagerUsers() {
+    loadManagerUsers { result in
+        switch result {
+        case .success(let loadedUsers):
+            managerDictionary = loadedUsers
+            print("Manager users loaded successfully.")
+        case .failure(let error):
+            print("Error loading manager users: \(error.localizedDescription)")
+        }
+    }
+}

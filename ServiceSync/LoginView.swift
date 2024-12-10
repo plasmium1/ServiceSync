@@ -1,11 +1,14 @@
 import SwiftUI
 
 struct LoginView: View {
+    @EnvironmentObject private var authManager: AuthenticationManager
     @State private var email = ""
     @State private var password = ""
     @State private var showError = false
     @State private var errorMessage = ""
     @State private var isLoggedIn = false // Simulates login success
+    
+    
 
     var body: some View {
         NavigationView {
@@ -82,7 +85,7 @@ struct LoginView: View {
             .ignoresSafeArea()
         }
         .fullScreenCover(isPresented: $isLoggedIn) {
-            ContentView() // Main app view after login
+            ContentView(contextUser: authManager.user!.role) // Main app view after login
         }
     }
 
@@ -98,6 +101,7 @@ struct LoginView: View {
             // Simulate successful login
             showError = false
             isLoggedIn = true
+            authManager.signIn(email: email, password: password) {result in}
         }
     }
 
