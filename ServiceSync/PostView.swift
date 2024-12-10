@@ -9,12 +9,13 @@ import SwiftUI
 
 struct PostView: View {
     @State var post: Post // Binding to allow updates
-    @State var contextUser: ManagerUser
+    @State var contextUser: User
     @State private var navigateToForm = false
     @State var showReport = false
     @State private var report: String = ""
+    @State private var manager: ManagerUser? = nil
     
-    init(post: Post, contextUser: ManagerUser) {
+    init(post: Post, contextUser: User) {
         self.post = post
         self.contextUser = contextUser
     }
@@ -22,7 +23,7 @@ struct PostView: View {
     var body: some View {
         VStack(alignment: .leading) {
             HStack {
-                if let logo = post.getPostManager().getProfileImage() {
+                if let logo = manager!.getProfileImage() {
                     Image(uiImage: logo)
                         .resizable()
                         .scaledToFill()
@@ -34,13 +35,18 @@ struct PostView: View {
                         .fill(Color.blue)
                         .frame(width: 100, height: 100)
                         .overlay(
-                            Text(post.getPostManager().getUsername().prefix(1)) // First letter of organization name as placeholder
+                            Text(manager!.getUsername().prefix(1)) // First letter of organization name as placeholder
                                 .font(.largeTitle)
                                 .foregroundStyle(.white)
                         )
                 }
-                Text(post.getPostManager().getUsername())
+                Text(manager!.getUsername())
                     .font(.headline)
+            }
+            .onAppear {
+                post.getPostManager() { loadedManager in
+                    manager = loadedManager
+                }
             }
             
             

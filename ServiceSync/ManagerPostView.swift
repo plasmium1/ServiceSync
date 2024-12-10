@@ -48,6 +48,6 @@ struct ManagerPostView: View {
     }
 }
 
-#Preview {
-    ManagerPostView(contextUser: placeholderManager)
-}
+//#Preview {
+//    ManagerPostView(contextUser: placeholderManager)
+//}

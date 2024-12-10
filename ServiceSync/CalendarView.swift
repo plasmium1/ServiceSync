@@ -25,7 +25,7 @@ struct CalendarView: UIViewRepresentable {
         return view
     }
     func makeCoordinator() -> Coordinator {
-        Coordinator(parent: self, eventStore: _eventStore)
+        Coordinator(parent: self, eventStore: _eventStore)	
     }
     
     func updateUIView(_ uiView: UIViewType, context: Context) {

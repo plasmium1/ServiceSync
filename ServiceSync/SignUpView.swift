@@ -1,13 +1,18 @@
 import SwiftUI
+import FirebaseAuth
 
 struct SignUpView: View {
+    @EnvironmentObject private var authManager: AuthenticationManager
     @State private var fullName = ""
     @State private var email = ""
+    @State private var age = ""
     @State private var password = ""
     @State private var confirmPassword = ""
     @State private var showError = false
     @State private var errorMessage = ""
     @State private var isSignedUp = false // Simulates successful sign-up
+    @State private var accountType: AccountType = .student // Default to Student account
+    @State private var newUser: User? = nil
 
     var body: some View {
         NavigationView {
@@ -23,15 +28,37 @@ struct SignUpView: View {
                         .foregroundColor(.green)
                         .padding(.bottom, 40)
                     
+                    // Account Type Selector
+                    Picker("Account Type", selection: $accountType) {
+                        Text("Student").tag(AccountType.student)
+                        Text("Manager").tag(AccountType.manager)
+                    }
+                    .pickerStyle(SegmentedPickerStyle())
+                    .padding(.bottom, 20)
+                    
+                    
                     // Full Name Field
-                    TextField("Full Name", text: $fullName)
-                        .padding()
-                        .background(Color(.systemGray6))
-                        .cornerRadius(8)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(fullName.isEmpty ? Color.red.opacity(0.6) : Color.clear, lineWidth: 1)
-                        )
+                    if (accountType == AccountType.student) {
+                        TextField("Full Name", text: $fullName)
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .cornerRadius(8)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(fullName.isEmpty ? Color.red.opacity(0.6) : Color.clear, lineWidth: 1)
+                            )
+                    } else if (accountType == AccountType.manager) {
+                        TextField("Program Name", text: $fullName)
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .cornerRadius(8)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(fullName.isEmpty ? Color.red.opacity(0.6) : Color.clear, lineWidth: 1)
+                            )
+                    }
+                    
+                    
                     
                     // Email Field
                     TextField("Email", text: $email)
@@ -45,8 +72,37 @@ struct SignUpView: View {
                                 .stroke(email.isEmpty ? Color.red.opacity(0.6) : Color.clear, lineWidth: 1)
                         )
                     
+                    if (accountType == AccountType.student) {
+                        // Age Field
+                        TextField("Age", text: $age)
+                            .autocapitalization(.none)
+                            .keyboardType(.emailAddress)
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .cornerRadius(8)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(email.isEmpty ? Color.red.opacity(0.6) : Color.clear, lineWidth: 1)
+                            )
+                    } else if (accountType == AccountType.manager) {
+                        TextField("Telephone", text: $age)
+                            .autocapitalization(.none)
+                            .keyboardType(.emailAddress)
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .cornerRadius(8)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(email.isEmpty ? Color.red.opacity(0.6) : Color.clear, lineWidth: 1)
+                            )
+                    }
+                    
+                    
                     // Password Field
                     SecureField("Password", text: $password)
+                        .textContentType(.newPassword)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.none)
                         .padding()
                         .background(Color(.systemGray6))
                         .cornerRadius(8)
@@ -57,6 +113,9 @@ struct SignUpView: View {
                     
                     // Confirm Password Field
                     SecureField("Confirm Password", text: $confirmPassword)
+                        .textContentType(.newPassword)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.none)
                         .padding()
                         .background(Color(.systemGray6))
                         .cornerRadius(8)
@@ -67,7 +126,7 @@ struct SignUpView: View {
                     
                     // Sign-Up Button
                     Button(action: handleSignUp) {
-                        Text("Sign Up")
+                        Text("Sign Up as \(accountType.rawValue.capitalized)")
                             .frame(maxWidth: .infinity)
                             .padding()
                             .foregroundColor(.white)
@@ -92,7 +151,8 @@ struct SignUpView: View {
             .ignoresSafeArea()
         }
         .fullScreenCover(isPresented: $isSignedUp) {
-            ContentView() // Replace with your app's main content view
+            
+            ContentView(contextUser: authManager.user!.role) // Replace with your app's main content view
         }
     }
 
@@ -110,6 +170,24 @@ struct SignUpView: View {
         } else {
             // Simulate successful sign-up
             showError = false
+            print("Signed up as \(accountType.rawValue.capitalized)")
+            
+            if (accountType == AccountType.student) {
+                let a: Int? = Int(age)
+                DispatchQueue.main.async {
+                    //Some Auth Sign up
+                    authManager.signUpStudent(name: fullName, username: fullName, age: a!, email: email, password: password)
+                    let newStudent: StudentUser = StudentUser(name: fullName, username: fullName, id: Auth.auth().currentUser!.uid, age: a!, interests: [], aboutMe: "", email: email, profileImage: nil, badges: [])
+                    uploadStudentUserWithImage(newStudent)
+                }
+            } else if (accountType == AccountType.manager) {
+                let a: Int? = Int(age)
+                DispatchQueue.main.async {
+                    authManager.signUpManager(name: fullName, telephone: a!, email: email, password: password)
+                    let newManager = ManagerUser(programName: fullName, id: Auth.auth().currentUser!.uid, email: email, telephone: a!, description: "", profileImage: nil, website: "", badges: [])
+                    uploadManagerUserWithImage(newManager)
+                }
+            }
             isSignedUp = true
         }
     }
@@ -119,6 +197,12 @@ struct SignUpView: View {
         let emailRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}"
         return NSPredicate(format: "SELF MATCHES %@", emailRegex).evaluate(with: email)
     }
+}
+
+// MARK: - AccountType Enum
+enum AccountType: String {
+    case student = "student"
+    case manager = "manager"
 }
 
 // MARK: - Preview

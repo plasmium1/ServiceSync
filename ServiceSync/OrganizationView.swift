@@ -136,8 +136,10 @@ struct OrganizationView: View {
                 // Update organization logo after selection
                 if let img = image {
                     organization.setProfileImage(image: img)
+                    uploadManagerUserWithImage(organization)
                 } else {
                     organization.setProfileImage(image: nil)
+                    uploadManagerUserWithImage(organization)
                 }
             })
         }
@@ -149,9 +151,9 @@ struct OrganizationView: View {
     }
 }
 
-struct OrganizationView_Previews: PreviewProvider {
-    static var previews: some View {
-        
-        OrganizationView(organization: placeholderManager2)
-    }
-}
+//struct OrganizationView_Previews: PreviewProvider {
+//    static var previews: some View {
+//        
+//        OrganizationView(organization: placeholderManager2)
+//    }
+//}

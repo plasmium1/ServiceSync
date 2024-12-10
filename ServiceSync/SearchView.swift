@@ -1,6 +1,9 @@
 import SwiftUI
+import Firebase
+import FirebaseStorage
 
 struct SearchView: View {
+    @EnvironmentObject private var authManager: AuthenticationManager
     @State private var searchText = ""
     @State private var items = placeholderPostArray
     @State private var isDisclosed = false
@@ -8,9 +11,6 @@ struct SearchView: View {
     @State private var focusContent = true
     @State private var offset = 0
     @State private var count = 0
-    
-    
-    
     
     @State private var stateOfFilters = filters
     
@@ -40,7 +40,7 @@ struct SearchView: View {
             }
             return tempItems
         } else {
-            var results = [placeholderPost3]
+            var results: [Post] = []
             for post in placeholderPostArray{
                 
                 if focusContent == true{
@@ -265,7 +265,7 @@ struct SearchView: View {
                     // List of filtered results
                     ScrollView{
                         ForEach(filteredItems) { post in
-                            PostView(post: post, contextUser: post.postManager)
+                            PostView(post: post, contextUser: )
                         }
                     }
                     .listStyle(PlainListStyle())
@@ -274,7 +274,70 @@ struct SearchView: View {
         }
         .ignoresSafeArea()
         
-        
+    }
+    
+    private func loadCurrentUser(completion: @escaping (User?) -> Void) {
+        guard let user = authManager.user else {
+            completion(nil)
+            return
+        }
+
+        let userID = user.id
+        let db = Firestore.firestore()
+
+        // Fetch the user document
+        db.collection("users").document(userID).getDocument { document, error in
+            if let error = error {
+                print("Error fetching user: \(error)")
+                completion(nil)
+                return
+            }
+
+            guard let data = document?.data(),
+                  let role = data["role"] as? String,
+                  let username = data["username"] as? String,
+                  let email = data["email"] as? String else {
+                completion(nil)
+                return
+            }
+
+            let profileImage = UIImage(systemName: "person.circle") // Default image or fetched from storage
+            let badges = data["badges"] as? [String] ?? []
+
+            if role == "student" {
+                let name = data["name"] as? String ?? ""
+                let age = data["age"] as? Int ?? 0
+                let interests = data["interests"] as? [UUID] ?? []
+                let aboutMe = data["aboutMe"] as? String ?? ""
+                completion(StudentUser(
+                    name: name,
+                    username: username,
+                    id: userID,
+                    age: age,
+                    interests: interests,
+                    aboutMe: aboutMe,
+                    email: email,
+                    profileImage: profileImage,
+                    badges: badges
+                ))
+            } else if role == "manager" {
+                let telephone = data["telephone"] as? Int ?? 0
+                let description = data["description"] as? String ?? ""
+                let website = data["website"] as? String
+                completion(ManagerUser(
+                    programName: username,
+                    id: userID,
+                    email: email,
+                    telephone: telephone,
+                    description: description,
+                    profileImage: profileImage,
+                    website: website,
+                    badges: badges
+                ))
+            } else {
+                completion(nil)
+            }
+        }
     }
 }
 

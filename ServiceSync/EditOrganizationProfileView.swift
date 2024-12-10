@@ -43,7 +43,7 @@ struct EditOrganizationProfileView: View {
                         organization.setDescription(description: newDescription)
                     }
                     
-                    uploadManagerUser(organization)
+                    uploadManagerUserWithImage(organization)
                     // Close the sheet after saving
                     dismiss()
                 }
