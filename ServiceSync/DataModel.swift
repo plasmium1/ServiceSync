@@ -326,6 +326,10 @@ class Post: Identifiable, Hashable, Equatable, ObservableObject {
     func setPostContent(content: String) {
         self.postContent = content
     }
+    
+    func setID(id: UUID) {
+        self.id = id
+    }
 }
 
 class Comment {
