@@ -9,7 +9,7 @@ import SwiftUI
 
 struct PostView: View {
     @State var post: Post // Binding to allow updates
-    @State var contextUser: User
+    @State var contextUser: User?
     @State private var navigateToForm = false
     @State var showReport = false
     @State private var report: String = ""
@@ -18,6 +18,11 @@ struct PostView: View {
     init(post: Post, contextUser: User) {
         self.post = post
         self.contextUser = contextUser
+    }
+    
+    init(post: Post) {
+        self.post = post
+        
     }
     
     var body: some View {
@@ -98,15 +103,15 @@ struct PostView: View {
             HStack {
                 Button(action: {
                     withAnimation {
-                        if (contextUser.isPostLiked(post: post)) {
-                            contextUser.unlikePost(id: post.getID())
+                        if ((contextUser?.isPostLiked(post: post)) != nil) {
+                            contextUser?.unlikePost(id: post.getID())
                         } else {
-                            contextUser.likePost(id: post.getID())
+                            contextUser?.likePost(id: post.getID())
                         }
                     }
                 }) {
-                    Image(systemName: contextUser.isPostLiked(post: post) ? "heart.fill" : "heart")
-                        .foregroundColor(contextUser.isPostLiked(post: post) ? .red : .gray)
+                    Image(systemName: contextUser?.isPostLiked(post: post) ?? false ? "heart.fill" : "heart")
+                        .foregroundColor(contextUser?.isPostLiked(post: post) ?? false ? .red : .gray)
                         .font(.title)
                 }
                 Spacer()

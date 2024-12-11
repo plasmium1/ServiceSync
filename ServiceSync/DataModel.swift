@@ -169,6 +169,7 @@ class ManagerUser: User {
 class Tag: Identifiable, Hashable, Equatable {
     var name: String
     var type: String
+    var id = UUID()
     
     init(name: String, type: String) {
         self.name = name
@@ -189,6 +190,10 @@ class Tag: Identifiable, Hashable, Equatable {
     
     func getType() -> String {
         return self.type
+    }
+    
+    func getID() -> UUID {
+        return self.id
     }
     
     func getTypeColor() -> Color {
@@ -329,26 +334,19 @@ class Post: Identifiable, Hashable, Equatable, ObservableObject {
 }
 
 class Comment {
-    var postUser: String
+    var postUser: StudentUser
     var content: String
     var likes: Int
     
-    init(postUser: String, content: String, likes: Int) {
+    init(postUser: StudentUser, content: String, likes: Int) {
         self.postUser = postUser
         self.content = content
         self.likes = likes
     }
     
-    func getUser(completion: @escaping (StudentUser?) -> Void) {
-        loadStudentUser(userID: postUser) { result in
-            switch result {
-            case .success(let student):
-                completion(student)
-            case .failure(let error):
-                print("Load manager failed \(error)")
-                completion(nil)
-            }
-        }
+    func getUser() -> StudentUser {
+        
+        return self.postUser
     }
     
     func getContent() -> String {

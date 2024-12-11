@@ -496,13 +496,6 @@ func loadPost(postID: String, completion: @escaping (Result<Post, Error>) -> Voi
             return
         }
         
-        // Deserialize comments safely
-        let commentsData = data["comments"] as? [Any]
-        let comments: [Comment] = commentsData?.compactMap {
-            guard let commentDict = $0 as? [String: Any] else { return nil }
-            return Comment.fromDictionary(commentDict)
-        } ?? []
-        
         // Download image
         let imageRef = storage.child(postImageURL)
         imageRef.getData(maxSize: 5 * 1024 * 1024) { data, error in
@@ -516,8 +509,9 @@ func loadPost(postID: String, completion: @escaping (Result<Post, Error>) -> Voi
                 return
             }
             
-            // Deserialize tags
+            // Deserialize tags and comments
             let tags = tagsData.compactMap { Tag.fromDictionary($0) }
+            let comments = (data["comments"] as? [[String: Any]])?.compactMap { Comment.fromDictionary($0) } ?? []
             
             // Create Post object
             let post = Post(postManager: postManagerID, title: title, postImage: postImage, postContent: postContent, location: location, eventDate: eventDate, likes: likes, comments: comments, tags: tags)
@@ -526,29 +520,107 @@ func loadPost(postID: String, completion: @escaping (Result<Post, Error>) -> Voi
     }
 }
 
-
 extension Comment {
     func toDictionary() -> [String: Any] {
-        return ["postUser": postUser, "content": content, "likes": likes]
+        return ["content": content, "author": author]
     }
     
     static func fromDictionary(_ dictionary: [String: Any]) -> Comment? {
-        guard let postUser = dictionary["postUser"] as? String,
-              let content = dictionary["content"] as? String,
-              let likes = dictionary["likes"] as? Int else { return nil }
-        return Comment(postUser: postUser, content: content, likes: likes)
+        guard let content = dictionary["content"] as? String,
+              let author = dictionary["author"] as? String else { return nil }
+        return Comment(postUser: <#T##StudentUser#>, content: <#T##String#>, likes: <#T##Int#>)
     }
 }
 
 extension Tag {
     func toDictionary() -> [String: Any] {
-        return ["name": name, "type": type]
+        return ["name": name]
     }
     
     static func fromDictionary(_ dictionary: [String: Any]) -> Tag? {
-        guard let name = dictionary["name"] as? String,
-              let type = dictionary["type"] as? String else { return nil }
-        return Tag(name: name, type: type)
+        guard let name = dictionary["name"] as? String else { return nil }
+        return Tag(name: name)
     }
 }
 
+func loadAllPosts(completion: @escaping (Result<[Post], Error>) -> Void) {
+    let db = Firestore.firestore()
+    let storage = Storage.storage().reference()
+    
+    db.collection("posts").getDocuments { snapshot, error in
+        if let error = error {
+            completion(.failure(error))
+            return
+        }
+        
+        guard let documents = snapshot?.documents else {
+            completion(.failure(NSError(domain: "FirestoreError", code: -1, userInfo: [NSLocalizedDescriptionKey: "No posts found"])))
+            return
+        }
+        
+        var posts: [Post] = []
+        let dispatchGroup = DispatchGroup()
+        var errors: [Error] = []
+        
+        for document in documents {
+            let data = document.data()
+            
+            guard let postManagerID = data["postManagerID"] as? String,
+                  let title = data["title"] as? String,
+                  let postImageURL = data["postImageURL"] as? String,
+                  let postContent = data["postContent"] as? String,
+                  let eventDate = data["eventDate"] as? String,
+                  let location = data["location"] as? String,
+                  let likes = data["likes"] as? Int,
+                  let tagsData = data["tags"] as? [[String: Any]]
+            else {
+                errors.append(NSError(domain: "SerializationError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to deserialize a post"]))
+                continue
+            }
+            
+            dispatchGroup.enter()
+            
+            // Download image for each post
+            let imageRef = storage.child(postImageURL)
+            imageRef.getData(maxSize: 5 * 1024 * 1024) { data, error in
+                if let error = error {
+                    errors.append(error)
+                    dispatchGroup.leave()
+                    return
+                }
+                
+                guard let imageData = data, let postImage = UIImage(data: imageData) else {
+                    errors.append(NSError(domain: "ImageError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to download image"]))
+                    dispatchGroup.leave()
+                    return
+                }
+                
+                // Deserialize tags and comments
+                let tags = tagsData.compactMap { Tag.fromDictionary($0) }
+                
+                let documentData = document.data()
+                
+                guard let commentsData = documentData["comments"] as? [[String: Any]] else {
+                    print("No comments field or incorrect type in Firestore document")
+                    return
+                }
+
+                let comments = commentsData.compactMap { Comment.fromDictionary($0) }
+                
+                // Create Post object
+                let post = Post(postManager: postManagerID, title: title, postImage: postImage, postContent: postContent, location: location, eventDate: eventDate, likes: likes, comments: comments, tags: tags)
+                
+                posts.append(post)
+                dispatchGroup.leave()
+            }
+        }
+        
+        dispatchGroup.notify(queue: .main) {
+            if errors.isEmpty {
+                completion(.success(posts))
+            } else {
+                completion(.failure(errors.first!)) // Return the first error encountered
+            }
+        }
+    }
+}
