@@ -11,7 +11,7 @@ struct SearchView: View {
     @State private var focusContent = true
     @State private var offset = 0
     @State private var count = 0
-    var errorMessage: String?
+    @State private var errorMessage: String?
     
     @State private var stateOfFilters = filters
     
@@ -277,19 +277,23 @@ struct SearchView: View {
         
     }
     
-    mutating func fetchPosts() {
-            loadAllPosts { result in
-                DispatchQueue.main.async {
-                    switch result {
-                    case .success(let fetchedPosts):
-                        self.items = fetchedPosts
-                    case .failure(let error):
-                        self.errorMessage = error.localizedDescription
-                        print("Error fetching posts: \(error)")
-                    }
+    func fetchPosts() {
+        loadAllPosts { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let fetchedPosts):
+                    // Update @State property
+                    items = fetchedPosts
+                case .failure(let error):
+                    // Update @State property
+                    errorMessage = error.localizedDescription
+                    print("Error fetching posts: \(error)")
                 }
             }
         }
+    }
+
+
     
     
     private func loadCurrentUser(completion: @escaping (User?) -> Void) {
