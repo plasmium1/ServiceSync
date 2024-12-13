@@ -89,7 +89,7 @@ struct LoginView: View {
             .ignoresSafeArea()
         }
         .fullScreenCover(isPresented: $isLoggedIn) {
-            ContentView(contextUser: authManager.currentUser!.role, isLoggedIn: $isLoggedIn) // Main app view after login
+            ContentView(contextUser: authManager.currentUser!.role) // Main app view after login
         }
         
     }

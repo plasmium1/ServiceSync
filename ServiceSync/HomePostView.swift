@@ -28,9 +28,12 @@ struct HomePostView: View {
                     
                     
                 }
-                post.getPostImage()
-                    .resizable()
-                    .frame(width:410, height:350)
+                if let img = post.getPostImage() {
+                    img
+                        .resizable()
+                        .frame(width:410, height:350)
+                }
+                
                 
                 Text(post.postContent)
                     .padding()

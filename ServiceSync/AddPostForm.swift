@@ -8,16 +8,20 @@
 import SwiftUI
 import PhotosUI // Required for the image picker
 
+import SwiftUI
+import PhotosUI
+
 struct AddPostForm: View {
     @Binding var posts: [Post]
     @State var contextUser: User
-    @State private var username: String = "New User" // Default username
+    @State private var username: String = "New User"
     @State private var title: String = ""
     @State private var description: String = ""
     @State private var location: String = ""
     @State private var eventDate: String = ""
-    @State private var selectedImage: UIImage? = nil // For image selection
-    @State private var selectedTags: Set<Tag> = [] // For selected tags
+    @State private var selectedImage: UIImage? = nil
+    @State private var selectedItem: PhotosPickerItem? = nil
+    @State private var selectedTags: Set<Tag> = []
     @State private var availableTags: [Tag] = [
         Tag(name: "Tech", type: "Tech"),
         Tag(name: "Arts", type: "Arts"),
@@ -63,8 +67,9 @@ struct AddPostForm: View {
                         .frame(height: 150)
                         .padding()
                 }
+
                 PhotosPicker(
-                    selection: .constant(nil),
+                    selection: $selectedItem,
                     matching: .images,
                     photoLibrary: .shared()
                 ) {
@@ -74,8 +79,13 @@ struct AddPostForm: View {
                         .foregroundColor(.white)
                         .cornerRadius(8)
                 }
-                .onChange(of: selectedImage) { newValue in
-                    // Handle the selected image
+                .onChange(of: selectedItem) { newItem in
+                    Task {
+                        if let data = try? await newItem?.loadTransferable(type: Data.self),
+                           let uiImage = UIImage(data: data) {
+                            selectedImage = uiImage
+                        }
+                    }
                 }
 
                 // Tag Selection
@@ -101,12 +111,10 @@ struct AddPostForm: View {
 
                 // Add Post Button
                 Button("Add Post") {
-                    guard let selected = selectedImage else { return } // Ensure image is selected
-                    
                     let newPost = Post(
                         postManager: contextUser.getID(),
                         title: title,
-                        postImage: selected,
+                        postImage: selectedImage,
                         postContent: description,
                         location: location,
                         eventDate: eventDate,
@@ -114,15 +122,17 @@ struct AddPostForm: View {
                         comments: [],
                         tags: Array(selectedTags)
                     )
-                    posts.append(newPost)
                     
-                    // Clear fields after adding
-                    title = ""
-                    description = ""
-                    location = ""
-                    eventDate = ""
-                    selectedImage = nil
-                    selectedTags.removeAll()
+                    uploadPost(post: newPost) { result in
+                        switch result {
+                        case .success:
+                            print("Uploaded new post")
+                            posts.append(newPost)
+                            clearFields()
+                        case .failure(let error):
+                            print("Failed to upload post \(error.localizedDescription)")
+                        }
+                    }
                 }
                 .padding()
                 .background(Color.green)
@@ -132,7 +142,17 @@ struct AddPostForm: View {
             .padding()
         }
     }
+
+    private func clearFields() {
+        title = ""
+        description = ""
+        location = ""
+        eventDate = ""
+        selectedImage = nil
+        selectedTags.removeAll()
+    }
 }
+
 
 // Tag View for rendering tags
 struct TagView: View {
