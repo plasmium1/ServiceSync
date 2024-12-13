@@ -125,7 +125,11 @@ struct SignUpView: View {
                         )
                     
                     // Sign-Up Button
-                    Button(action: handleSignUp) {
+                    Button() {
+                        Task {
+                            await handleSignUp()
+                        }
+                    }label:{
                         Text("Sign Up as \(accountType.rawValue.capitalized)")
                             .frame(maxWidth: .infinity)
                             .padding()
@@ -134,6 +138,7 @@ struct SignUpView: View {
                             .cornerRadius(8)
                     }
                     .padding(.top, 10)
+
                     
                     // Error Message
                     if showError {
@@ -152,44 +157,45 @@ struct SignUpView: View {
         }
         .fullScreenCover(isPresented: $isSignedUp) {
             
-            ContentView(contextUser: authManager.user!.role) // Replace with your app's main content view
+            ContentView(contextUser: accountType.rawValue, isLoggedIn: $isSignedUp) // Replace with your app's main content view
         }
     }
 
     // Sign-Up Logic
-    func handleSignUp() {
-        if fullName.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty {
-            showError = true
-            errorMessage = "Please fill in all fields."
-        } else if !isValidEmail(email) {
-            showError = true
-            errorMessage = "Please enter a valid email address."
-        } else if password != confirmPassword {
-            showError = true
-            errorMessage = "Passwords do not match."
-        } else {
-            // Simulate successful sign-up
-            showError = false
-            print("Signed up as \(accountType.rawValue.capitalized)")
-            
-            if (accountType == AccountType.student) {
-                let a: Int? = Int(age)
-                DispatchQueue.main.async {
-                    //Some Auth Sign up
-                    authManager.signUpStudent(name: fullName, username: fullName, age: a!, email: email, password: password)
-                    let newStudent: StudentUser = StudentUser(name: fullName, username: fullName, id: Auth.auth().currentUser!.uid, age: a!, interests: [], aboutMe: "", email: email, profileImage: nil, badges: [])
-                    uploadStudentUserWithImage(newStudent)
+    func handleSignUp() async {
+        do {
+            print("Signing up")
+            if fullName.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty {
+                showError = true
+                errorMessage = "Please fill in all fields."
+            } else if !isValidEmail(email) {
+                showError = true
+                errorMessage = "Please enter a valid email address."
+            } else if password != confirmPassword {
+                showError = true
+                errorMessage = "Passwords do not match."
+            } else {
+                // Simulate successful sign-up
+                showError = false
+                print("Signed up as \(accountType.rawValue.capitalized)")
+                print(AccountType.student.rawValue)
+                print(AccountType.manager.rawValue)
+                if (accountType.rawValue == AccountType.student.rawValue) {
+                    let a: Int? = Int(age)
+                    print("Began creating student")
+                    
+                    try await authManager.createStudentUser(withEmail: email, password: password, name: fullName, age: a!, telephone: a!)
+                    print("Finished creating student")
+                } else if (accountType.rawValue == AccountType.manager.rawValue) {
+                    let a: Int? = Int(age)
+                    try await authManager.createManagerUser(withEmail: email, password: password, name: fullName, age: a!, telephone: a!)
                 }
-            } else if (accountType == AccountType.manager) {
-                let a: Int? = Int(age)
-                DispatchQueue.main.async {
-                    authManager.signUpManager(name: fullName, telephone: a!, email: email, password: password)
-                    let newManager = ManagerUser(programName: fullName, id: Auth.auth().currentUser!.uid, email: email, telephone: a!, description: "", profileImage: nil, website: "", badges: [])
-                    uploadManagerUserWithImage(newManager)
-                }
+                isSignedUp = true
             }
-            isSignedUp = true
+        } catch {
+            print("Failed to create new user")
         }
+        
     }
 
     // Basic Email Validation

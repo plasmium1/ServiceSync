@@ -10,7 +10,7 @@ import PhotosUI // Required for the image picker
 
 struct AddPostForm: View {
     @Binding var posts: [Post]
-    @State var contextUser: ManagerUser
+    @State var contextUser: User
     @State private var username: String = "New User" // Default username
     @State private var title: String = ""
     @State private var description: String = ""

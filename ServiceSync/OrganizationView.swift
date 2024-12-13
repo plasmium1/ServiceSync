@@ -11,7 +11,7 @@ import PhotosUI
 // Organization Profile View
 struct OrganizationView: View {
     // Sample Organization data
-    @StateObject var organization: ManagerUser
+    @StateObject var organization: User
     
     // For handling image picker
     @State private var isImagePickerPresented = false
@@ -136,18 +136,18 @@ struct OrganizationView: View {
                 // Update organization logo after selection
                 if let img = image {
                     organization.setProfileImage(image: img)
-                    uploadManagerUserWithImage(organization)
+//                    uploadManagerUserWithImage(organization)
                 } else {
                     organization.setProfileImage(image: nil)
-                    uploadManagerUserWithImage(organization)
+//                    uploadManagerUserWithImage(organization)
                 }
             })
         }
-        .onAppear {
-            loadBadges { badges in
-                badgesArray = badges
-            }
-        }
+//        .onAppear {
+//            loadBadges { badges in
+//                badgesArray = badges
+//            }
+//        }
     }
 }
 

@@ -10,7 +10,7 @@ import SwiftUI
 struct ManagerPostView: View {
     @State private var posts = placeholderPostArray
     @State private var showForm = false
-    @State var contextUser: ManagerUser
+    @State var contextUser: User
     
     var body: some View {
         NavigationView {

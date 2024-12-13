@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct EditVolunteerProfileView: View {
-    @ObservedObject var user: StudentUser
+    @ObservedObject var user: User
     
     @State private var newUsername = ""
     @State private var newEmail = ""
@@ -32,7 +32,7 @@ struct EditVolunteerProfileView: View {
                     if !newEmail.isEmpty {
                         user.setEmail(email: newEmail)
                     }
-                    uploadStudentUserWithImage(user)
+//                    uploadStudentUserWithImage(user)
                     // Close the sheet after saving
                     dismiss()
                 }

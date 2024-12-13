@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import FirebaseAuth
 
 struct ContentView: View {
 enum Tab{
@@ -15,12 +16,14 @@ enum Tab{
     @State private var selectedTab: Tab = .home
     var contextUser: String
     @StateObject var myEvents = EventStore()
-    @StateObject private var viewModel = StudentUserViewModel()
+    @Binding var isLoggedIn: Bool
     
     var body: some View {
-        if (contextUser == "student") {
+        if (contextUser == "manager") {
+            ManagerPostView(contextUser: authManager.currentUser!)
+        } else {
             TabView(selection: $selectedTab){
-                if let studentUser = viewModel.studentUser {
+//                if let studentUser = viewModel.studentUser {
                     EventsCalendarView()
                         .environmentObject(myEvents)
                         .tabItem {
@@ -42,35 +45,16 @@ enum Tab{
                         .tag(Tab.home) // home tab
                         .environmentObject(authManager)
                     
-                    VolunteerView(user: studentUser)
+                    VolunteerView(isLoggedIn: $isLoggedIn)
                         .tabItem{
                             Label("Profile", systemImage: "person")
                         }
                         .tag(Tab.person) // profile tab
-                }
+                        .environmentObject(authManager)
+//                }
             }
-            .onAppear {
-                viewModel.viewLoadStudentUser(userID: authManager.user!.id)
-            }
-        } else if (contextUser == "manager") {
-            ManagerPostView(contextUser: contextUser as! ManagerUser)
-        }
-    }
-}
-
-class StudentUserViewModel: ObservableObject {
-    @Published var studentUser: StudentUser?
-    @Published var errorMessage: String?
-
-    func viewLoadStudentUser(userID: String) {
-        loadStudentUser(userID: userID) { [weak self] result in
-            DispatchQueue.main.async {
-                switch result {
-                case .success(let user):
-                    self?.studentUser = user
-                case .failure(let error):
-                    self?.errorMessage = error.localizedDescription
-                }
+            .task {
+                await authManager.fetchUser()
             }
         }
     }

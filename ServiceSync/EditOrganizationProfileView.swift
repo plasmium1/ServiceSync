@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct EditOrganizationProfileView: View {
-    @ObservedObject var organization: ManagerUser
+    @ObservedObject var organization: User
     
     @State private var newName = ""
     @State private var newEmail = ""
@@ -43,7 +43,7 @@ struct EditOrganizationProfileView: View {
                         organization.setDescription(description: newDescription)
                     }
                     
-                    uploadManagerUserWithImage(organization)
+//                    uploadManagerUserWithImage(organization)
                     // Close the sheet after saving
                     dismiss()
                 }

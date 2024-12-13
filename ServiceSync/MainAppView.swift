@@ -9,21 +9,29 @@ import SwiftUI
 
 struct MainAppView: View {
     @EnvironmentObject var authManager: AuthenticationManager
+    @State private var isLoggedIn: Bool = false
 
     var body: some View {
-        if authManager.isLoading {
-            ProgressView("Loading...")
-        } else if let user = authManager.user {
-            if user.role == "student" {
-                ContentView(contextUser: "student")
-            } else if user.role == "manager" {
-                ContentView(contextUser: "manager")
+        Group {
+            if let user = authManager.currentUser {
+                if user.role == "student" {
+                    ContentView(contextUser: "student", isLoggedIn: $isLoggedIn)
+                        .onAppear {
+                            isLoggedIn = true
+                        }
+                } else if user.role == "manager" {
+                    ContentView(contextUser: "manager", isLoggedIn: $isLoggedIn)
+                        .onAppear {
+                            isLoggedIn = true
+                        }
+                }
+            } else {
+                LoginView()
             }
-        } else {
-            LoginView()
         }
     }
 }
+
 
 
 #Preview {

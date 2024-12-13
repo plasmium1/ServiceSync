@@ -8,15 +8,15 @@
 import SwiftUI
 
 struct VolunteerView: View {
-    // Sample User data
-    @StateObject var user: StudentUser
-    
     // For handling image picker
+    @EnvironmentObject private var authManager: AuthenticationManager
+    
     @State private var isImagePickerPresented = false
     @State private var selectedImage: UIImage? = nil
     
     // Navigate to Edit Profile Screen (example)
     @State private var isEditingProfile = false
+    @Binding var isLoggedIn: Bool
     
     var body: some View {
         NavigationView {
@@ -25,7 +25,7 @@ struct VolunteerView: View {
                 HStack {
                     // Profile Picture (Placeholder or Selected Image)
                     Group {
-                        if let profileImage = user.getProfileImage() {
+                        if let profileImage = authManager.currentUser!.getProfileImage() {
                             Image(uiImage: profileImage)
                                 .resizable()
                                 .scaledToFill()
@@ -37,7 +37,7 @@ struct VolunteerView: View {
                                 .fill(Color.blue)
                                 .frame(width: 100, height: 100)
                                 .overlay(
-                                    Text(user.username.prefix(1)) // First letter of username as placeholder
+                                    Text(authManager.currentUser!.username.prefix(1)) // First letter of username as placeholder
                                         .font(.largeTitle)
                                         .foregroundStyle(Color.white)
                                 )
@@ -50,11 +50,11 @@ struct VolunteerView: View {
                     
                     // User Information
                     VStack(alignment: .leading) {
-                        Text(user.username)
+                        Text(authManager.currentUser!.username)
                             .font(.title)
                             .fontWeight(.bold)
                         
-                        Text(user.email)
+                        Text(authManager.currentUser!.email)
                             .font(.subheadline)
                             .foregroundColor(.gray)
                     }
@@ -75,14 +75,18 @@ struct VolunteerView: View {
                             .foregroundColor(.blue)
                     }
                     .sheet(isPresented: $isEditingProfile) {
-                        EditVolunteerProfileView(user: user)
+                        EditVolunteerProfileView(user: authManager.currentUser!)
                     }
                     
                     Spacer()
                     
                     Button(action: {
                         // Handle switch account action
-                        print("Switch Account tapped")
+                        Task {
+                            print("Switch Account tapped")
+                            authManager.signOut()
+                            isLoggedIn = false
+                        }
                     }) {
                         Text("Switch Account")
                             .font(.headline)
@@ -102,12 +106,11 @@ struct VolunteerView: View {
                     
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack {
-                            ForEach(user.getBadges(), id: \.self) { badgeID in
+                            ForEach(authManager.currentUser!.getBadges(), id: \.self) { badgeID in
                                 if let loadedAchievement = badgeLookUp(id: badgeID!) {
                                     AchievementView(achievement: loadedAchievement)
                                 }
                             }
-                            
                         }
                     }
                     .padding(.vertical)
@@ -119,18 +122,20 @@ struct VolunteerView: View {
             .imagePicker(isPresented: $isImagePickerPresented, selectedImage: $selectedImage, onImageSelected: { selectedImage in
                 // Update profile image after selection
                 if let img = selectedImage {
-                    user.setProfileImage(image: img)
+                    authManager.currentUser!.setProfileImage(image: img)
                 } else {
-                    user.setProfileImage(image: nil)
+                    authManager.currentUser!.setProfileImage(image: nil)
                 }
             })
         }
-        
+        .task {
+            await authManager.fetchUser()
+        }
     }
 }
 
 //struct VolunteerView_Previews: PreviewProvider {
 //    static var previews: some View {
-//        VolunteerView(user: placeholderStudent)
+//        VolunteerView(authManager.currentUser!: placeholderStudent)
 //    }
 //}
