@@ -16,11 +16,23 @@ enum Tab{
     @State private var selectedTab: Tab = .home
     var contextUser: String
     @StateObject var myEvents = EventStore()
-    @Binding var isLoggedIn: Bool
     
     var body: some View {
         if (contextUser == "manager") {
-            ManagerPostView(contextUser: authManager.currentUser!)
+            TabView(selection: $selectedTab) {
+                ManagerPostView(contextUser: authManager.currentUser!)
+                    .tabItem {
+                        Label("Home", systemImage: "house")
+                    }
+                    .tag(Tab.home)
+                OrganizationView()
+                    .tabItem {
+                        Label("Profile", systemImage: "person")
+                    }
+                    .environmentObject(authManager)
+                    .tag(Tab.person)
+                
+            }
         } else {
             TabView(selection: $selectedTab){
 //                if let studentUser = viewModel.studentUser {
@@ -45,7 +57,7 @@ enum Tab{
                         .tag(Tab.home) // home tab
                         .environmentObject(authManager)
                     
-                    VolunteerView(isLoggedIn: $isLoggedIn)
+                    VolunteerView()
                         .tabItem{
                             Label("Profile", systemImage: "person")
                         }

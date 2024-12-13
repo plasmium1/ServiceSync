@@ -8,7 +8,8 @@
 import Foundation
 import SwiftUI
 
-
+import Firebase
+import FirebaseStorage
 import UIKit
 
 class User: ObservableObject, Codable {
@@ -204,7 +205,7 @@ class User: ObservableObject, Codable {
         }
 }
 
-class Tag: Identifiable, Hashable, Equatable {
+class Tag: Identifiable, Hashable, Equatable, Codable {
     var name: String
     var type: String
     
@@ -249,11 +250,11 @@ class Tag: Identifiable, Hashable, Equatable {
     }
 }
 
-class Post: Identifiable, Hashable, Equatable, ObservableObject {
+class Post: Identifiable, Hashable, Equatable, ObservableObject, Codable {
     @Published var postManagerID: String
-    @Published var id = UUID()
+    @Published var id: UUID
     @Published var title: String
-    @Published var postImage: UIImage
+    @Published var postImage: UIImage? // Optional image
     @Published var postContent: String
     @Published var eventDate: String
     @Published var location: String
@@ -261,9 +262,10 @@ class Post: Identifiable, Hashable, Equatable, ObservableObject {
     @Published var comments: [Comment]?
     @Published var tags: [Tag]
     @Published var reports: [String]?
-    
-    init(postManager: String, title: String, postImage: UIImage, postContent: String, location: String, eventDate: String, likes: Int, comments: [Comment], tags: [Tag]) {
+
+    init(postManager: String, title: String, postImage: UIImage? = nil, postContent: String, location: String, eventDate: String, likes: Int = 0, comments: [Comment] = [], tags: [Tag] = []) {
         self.postManagerID = postManager
+        self.id = UUID()
         self.title = title
         self.postImage = postImage
         self.postContent = postContent
@@ -276,23 +278,57 @@ class Post: Identifiable, Hashable, Equatable, ObservableObject {
     
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
-     }
-    
-    static func ==(lhs: Post, rhs: Post) -> Bool {
+    }
+
+    static func == (lhs: Post, rhs: Post) -> Bool {
         return lhs.id == rhs.id
+    }
+
+    // Custom Codable implementation
+    enum CodingKeys: String, CodingKey {
+        case postManagerID, id, title, postImage, postContent, eventDate, location, likes, comments, tags, reports
+    }
+
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.postManagerID = try container.decode(String.self, forKey: .postManagerID)
+        self.id = try container.decode(UUID.self, forKey: .id)
+        self.title = try container.decode(String.self, forKey: .title)
+        if let imageData = try container.decodeIfPresent(Data.self, forKey: .postImage) {
+            self.postImage = UIImage(data: imageData)
+        } else {
+            self.postImage = nil
         }
+        self.postContent = try container.decode(String.self, forKey: .postContent)
+        self.eventDate = try container.decode(String.self, forKey: .eventDate)
+        self.location = try container.decode(String.self, forKey: .location)
+        self.likes = try container.decodeIfPresent(Int.self, forKey: .likes)
+        self.comments = try container.decodeIfPresent([Comment].self, forKey: .comments)
+        self.tags = try container.decode([Tag].self, forKey: .tags)
+        self.reports = try container.decodeIfPresent([String].self, forKey: .reports)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(postManagerID, forKey: .postManagerID)
+        try container.encode(id, forKey: .id)
+        try container.encode(title, forKey: .title)
+        if let image = postImage, let imageData = image.pngData() {
+            try container.encode(imageData, forKey: .postImage)
+        }
+        try container.encode(postContent, forKey: .postContent)
+        try container.encode(eventDate, forKey: .eventDate)
+        try container.encode(location, forKey: .location)
+        try container.encodeIfPresent(likes, forKey: .likes)
+        try container.encodeIfPresent(comments, forKey: .comments)
+        try container.encode(tags, forKey: .tags)
+        try container.encodeIfPresent(reports, forKey: .reports)
+    }
     
-//    func getPostManager(completion: @escaping (ManagerUser?) -> Void) {
-//        loadManagerUser(userID: postManagerID) { result in
-//            switch result {
-//            case .success(let manager):
-//                completion(manager)
-//            case .failure(let error):
-//                print("Load manager failed \(error)")
-//                completion(nil)
-//            }
-//        }
-//    }
+    func getPostManager() async -> User? {
+        guard let snapshot = try? await Firestore.firestore().collection("users").document(postManagerID).getDocument() else { return nil }
+        return try? snapshot.data(as: User.self)
+    }
     
     func getID() -> UUID {
         return id
@@ -302,8 +338,12 @@ class Post: Identifiable, Hashable, Equatable, ObservableObject {
         return self.title
     }
     
-    func getPostImage() -> Image {
-        return Image(uiImage:self.postImage)
+    func getPostImage() -> Image? {
+        if let image = self.postImage {
+            return Image(uiImage: image)
+        } else {
+            return nil
+        }
     }
     
     func getPostContent() -> String {
@@ -370,7 +410,7 @@ class Post: Identifiable, Hashable, Equatable, ObservableObject {
     }
 }
 
-class Comment {
+class Comment: Codable {
     var postUser: String
     var content: String
     var likes: Int
@@ -380,18 +420,6 @@ class Comment {
         self.content = content
         self.likes = likes
     }
-    
-//    func getUser(completion: @escaping (StudentUser?) -> Void) {
-//        loadStudentUser(userID: postUser) { result in
-//            switch result {
-//            case .success(let student):
-//                completion(student)
-//            case .failure(let error):
-//                print("Load manager failed \(error)")
-//                completion(nil)
-//            }
-//        }
-//    }
     
     func getContent() -> String {
         return self.content

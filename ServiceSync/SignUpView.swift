@@ -157,7 +157,7 @@ struct SignUpView: View {
         }
         .fullScreenCover(isPresented: $isSignedUp) {
             
-            ContentView(contextUser: accountType.rawValue, isLoggedIn: $isSignedUp) // Replace with your app's main content view
+            ContentView(contextUser: accountType.rawValue) // Replace with your app's main content view
         }
     }
 

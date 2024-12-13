@@ -11,7 +11,8 @@ import PhotosUI
 // Organization Profile View
 struct OrganizationView: View {
     // Sample Organization data
-    @StateObject var organization: User
+    @EnvironmentObject private var authManager: AuthenticationManager
+//    @StateObject var authManager.currentUser!: User
     
     // For handling image picker
     @State private var isImagePickerPresented = false
@@ -28,7 +29,7 @@ struct OrganizationView: View {
                 HStack {
                     // Organization Logo (Placeholder or Selected Image)
                     Group {
-                        if let logo = organization.getProfileImage() {
+                        if let logo = authManager.currentUser!.getProfileImage() {
                             Image(uiImage: logo)
                                 .resizable()
                                 .scaledToFill()
@@ -40,7 +41,7 @@ struct OrganizationView: View {
                                 .fill(Color.blue)
                                 .frame(width: 100, height: 100)
                                 .overlay(
-                                    Text(organization.getUsername().prefix(1)) // First letter of organization name as placeholder
+                                    Text(authManager.currentUser!.getUsername().prefix(1)) // First letter of authManager.currentUser! name as placeholder
                                         .font(.largeTitle)
                                         .foregroundStyle(.white)
                                 )
@@ -53,13 +54,13 @@ struct OrganizationView: View {
                     
                     // Organization Information
                     VStack(alignment: .leading) {
-                        Text(organization.getUsername())
+                        Text(authManager.currentUser!.getUsername())
                             .font(.title)
                             .fontWeight(.bold)
-                        Text(organization.getEmail())
+                        Text(authManager.currentUser!.getEmail())
                             .font(.subheadline)
                             .foregroundStyle(.gray)
-                        if let website = organization.getWebsite() {
+                        if let website = authManager.currentUser!.getWebsite() {
                             Text(website)
                                 .font(.subheadline)
                                 .foregroundStyle(.gray)
@@ -68,7 +69,7 @@ struct OrganizationView: View {
                                 .font(.subheadline)
                                 .foregroundStyle(.gray)
                         }
-                        Text(organization.getDescription())
+                        Text(authManager.currentUser!.getDescription())
                             .font(.subheadline)
                             .foregroundStyle(.gray)
                             .lineLimit(2) // Limit description to two lines
@@ -90,13 +91,13 @@ struct OrganizationView: View {
                             .foregroundStyle(.blue)
                     }
                     .sheet(isPresented: $isEditingProfile) {
-                        EditOrganizationProfileView(organization: organization)
+                        EditOrganizationProfileView(organization: authManager.currentUser!)
                     }
                     
                     Spacer()
                     
                     Button(action: {
-                        // Handle switch account action (e.g., for admin to switch organizations)
+                        // Handle switch account action (e.g., for admin to switch authManager.currentUser!s)
                         print("Switch Account tapped")
                     }) {
                         Text("Switch Account")
@@ -119,7 +120,7 @@ struct OrganizationView: View {
                     
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack {
-                            ForEach(organization.getBadges(), id: \.self) { badgeID in
+                            ForEach(authManager.currentUser!.getBadges(), id: \.self) { badgeID in
                                 if let loadedAchievement = badgeLookUp(id: badgeID!) {
                                     AchievementView(achievement: loadedAchievement)
                                 }
@@ -133,27 +134,18 @@ struct OrganizationView: View {
             }
             .padding()
             .imagePicker(isPresented: $isImagePickerPresented, selectedImage: $selectedImage, onImageSelected: { image in
-                // Update organization logo after selection
+                // Update authManager.currentUser! logo after selection
                 if let img = image {
-                    organization.setProfileImage(image: img)
-//                    uploadManagerUserWithImage(organization)
+                    authManager.currentUser!.setProfileImage(image: img)
+//                    uploadManagerUserWithImage(authManager.currentUser!)
                 } else {
-                    organization.setProfileImage(image: nil)
-//                    uploadManagerUserWithImage(organization)
+                    authManager.currentUser!.setProfileImage(image: nil)
+//                    uploadManagerUserWithImage(authManager.currentUser!)
                 }
             })
         }
-//        .onAppear {
-//            loadBadges { badges in
-//                badgesArray = badges
-//            }
-//        }
+        .task {
+            await authManager.fetchUser()
+        }
     }
 }
-
-//struct OrganizationView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        
-//        OrganizationView(organization: placeholderManager2)
-//    }
-//}

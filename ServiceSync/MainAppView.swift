@@ -15,12 +15,12 @@ struct MainAppView: View {
         Group {
             if let user = authManager.currentUser {
                 if user.role == "student" {
-                    ContentView(contextUser: "student", isLoggedIn: $isLoggedIn)
+                    ContentView(contextUser: "student")
                         .onAppear {
                             isLoggedIn = true
                         }
                 } else if user.role == "manager" {
-                    ContentView(contextUser: "manager", isLoggedIn: $isLoggedIn)
+                    ContentView(contextUser: "manager")
                         .onAppear {
                             isLoggedIn = true
                         }

@@ -244,128 +244,122 @@ import FirebaseAuth
 //
 ////Posts
 //
-//func uploadPost(post: Post, completion: @escaping (Result<Void, Error>) -> Void) {
-//    let db = Firestore.firestore()
-//    let storage = Storage.storage().reference()
-//    
-//    // Serialize Post data
-//    guard let imageData = post.postImage.jpegData(compressionQuality: 0.8) else {
-//        completion(.failure(NSError(domain: "ImageError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to compress image"])))
-//        return
-//    }
-//    
-//    let postID = post.id.uuidString
-//    let imageRef = storage.child("postImages/\(postID).jpg")
-//    
-//    // Upload image
-//    imageRef.putData(imageData, metadata: nil) { _, error in
-//        if let error = error {
-//            completion(.failure(error))
-//            return
-//        }
-//        
-//        // Get image URL
-//        imageRef.downloadURL { url, error in
-//            if let error = error {
-//                completion(.failure(error))
-//                return
-//            }
-//            
-//            guard let imageURL = url?.absoluteString else {
-//                completion(.failure(NSError(domain: "ImageURL", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to retrieve image URL"])))
-//                return
-//            }
-//            
-//            // Prepare Firestore data
-//            let postData: [String: Any] = [
-//                "postManagerID": post.postManagerID,
-//                "id": postID,
-//                "title": post.title,
-//                "postImageURL": imageURL,
-//                "postContent": post.postContent,
-//                "eventDate": post.eventDate,
-//                "location": post.location,
-//                "likes": post.likes ?? 0,
-//                "comments": post.comments?.map { $0.toDictionary() } ?? [],
-//                "tags": post.tags.map { $0.toDictionary() },
-//                "reports": post.reports ?? []
-//            ]
-//            
-//            // Upload to Firestore
-//            db.collection("posts").document(postID).setData(postData) { error in
-//                if let error = error {
-//                    completion(.failure(error))
-//                } else {
-//                    completion(.success(()))
-//                }
-//            }
-//        }
-//    }
-//}
-//
-//func loadPost(postID: String, completion: @escaping (Result<Post, Error>) -> Void) {
-//    let db = Firestore.firestore()
-//    let storage = Storage.storage().reference()
-//    
-//    db.collection("posts").document(postID).getDocument { snapshot, error in
-//        if let error = error {
-//            completion(.failure(error))
-//            return
-//        }
-//        
-//        guard let data = snapshot?.data() else {
-//            completion(.failure(NSError(domain: "FirestoreError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Post not found"])))
-//            return
-//        }
-//        
-//        // Deserialize Firestore data
-//        guard let postManagerID = data["postManagerID"] as? String,
-//              let title = data["title"] as? String,
-//              let postImageURL = data["postImageURL"] as? String,
-//              let postContent = data["postContent"] as? String,
-//              let eventDate = data["eventDate"] as? String,
-//              let location = data["location"] as? String,
-//              let likes = data["likes"] as? Int,
-//              let tagsData = data["tags"] as? [[String: Any]],
-//              let idString = data["id"] as? String, // Get the `id` as a String
-//              let id = UUID(uuidString: idString) // Convert the string to UUID
-//        else {
-//            completion(.failure(NSError(domain: "SerializationError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to deserialize post"])))
-//            return
-//        }
-//        
-//        // Deserialize comments safely
-//        let commentsData = data["comments"] as? [Any]
-//        let comments: [Comment] = commentsData?.compactMap {
-//            guard let commentDict = $0 as? [String: Any] else { return nil }
-//            return Comment.fromDictionary(commentDict)
-//        } ?? []
-//        
-//        // Download image
-//        let imageRef = storage.child(postImageURL)
-//        imageRef.getData(maxSize: 5 * 1024 * 1024) { data, error in
-//            if let error = error {
-//                completion(.failure(error))
-//                return
-//            }
-//            
-//            guard let imageData = data, let postImage = UIImage(data: imageData) else {
-//                completion(.failure(NSError(domain: "ImageError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to download image"])))
-//                return
-//            }
-//            
-//            // Deserialize tags
-//            let tags = tagsData.compactMap { Tag.fromDictionary($0) }
-//            
-//            // Create Post object
-//            let post = Post(postManager: postManagerID, title: title, postImage: postImage, postContent: postContent, location: location, eventDate: eventDate, likes: likes, comments: comments, tags: tags)
-//            post.setID(id: id) // Ensure the post ID is set correctly
-//            completion(.success(post))
-//        }
-//    }
-//}
-//
-//
+func uploadPost(post: Post, completion: @escaping (Result<Void, Error>) -> Void) {
+    let db = Firestore.firestore()
+    let storage = Storage.storage().reference()
+
+    let postID = post.id.uuidString
+    var postData: [String: Any] = [
+        "postManagerID": post.postManagerID,
+        "id": postID,
+        "title": post.title,
+        "postContent": post.postContent,
+        "eventDate": post.eventDate,
+        "location": post.location,
+        "likes": post.likes ?? 0,
+        "comments": post.comments?.map { $0.toDictionary() } ?? [],
+        "tags": post.tags.map { $0.toDictionary() },
+        "reports": post.reports ?? []
+    ]
+
+    if let postImage = post.postImage, let imageData = postImage.jpegData(compressionQuality: 0.8) {
+        let imageRef = storage.child("postImages/\(postID).jpg")
+        imageRef.putData(imageData, metadata: nil) { _, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            imageRef.downloadURL { url, error in
+                if let error = error {
+                    completion(.failure(error))
+                    return
+                }
+                postData["postImageURL"] = url?.absoluteString
+                db.collection("posts").document(postID).setData(postData) { error in
+                    if let error = error {
+                        completion(.failure(error))
+                    } else {
+                        completion(.success(()))
+                    }
+                }
+            }
+        }
+    } else {
+        // No image case
+        db.collection("posts").document(postID).setData(postData) { error in
+            if let error = error {
+                completion(.failure(error))
+            } else {
+                completion(.success(()))
+            }
+        }
+    }
+}
+
+
+func loadPost(postID: String, completion: @escaping (Result<Post, Error>) -> Void) {
+    let db = Firestore.firestore()
+    let storage = Storage.storage().reference()
+    
+    db.collection("posts").document(postID).getDocument { snapshot, error in
+        if let error = error {
+            completion(.failure(error))
+            return
+        }
+        
+        guard let data = snapshot?.data() else {
+            completion(.failure(NSError(domain: "FirestoreError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Post not found"])))
+            return
+        }
+        
+        // Deserialize Firestore data
+        guard let postManagerID = data["postManagerID"] as? String,
+              let title = data["title"] as? String,
+              let postImageURL = data["postImageURL"] as? String,
+              let postContent = data["postContent"] as? String,
+              let eventDate = data["eventDate"] as? String,
+              let location = data["location"] as? String,
+              let likes = data["likes"] as? Int,
+              let tagsData = data["tags"] as? [[String: Any]],
+              let idString = data["id"] as? String, // Get the `id` as a String
+              let id = UUID(uuidString: idString) // Convert the string to UUID
+        else {
+            completion(.failure(NSError(domain: "SerializationError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to deserialize post"])))
+            return
+        }
+        
+        // Deserialize comments safely
+        let commentsData = data["comments"] as? [Any]
+        let comments: [Comment] = commentsData?.compactMap {
+            guard let commentDict = $0 as? [String: Any] else { return nil }
+            return Comment.fromDictionary(commentDict)
+        } ?? []
+        
+        // Download image
+        let imageRef = storage.child(postImageURL)
+        imageRef.getData(maxSize: 5 * 1024 * 1024) { data, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            guard let imageData = data, let postImage = UIImage(data: imageData) else {
+                completion(.failure(NSError(domain: "ImageError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to download image"])))
+                return
+            }
+            
+            // Deserialize tags
+            let tags = tagsData.compactMap { Tag.fromDictionary($0) }
+            
+            // Create Post object
+            let post = Post(postManager: postManagerID, title: title, postImage: postImage, postContent: postContent, location: location, eventDate: eventDate, likes: likes, comments: comments, tags: tags)
+            post.setID(id: id) // Ensure the post ID is set correctly
+            completion(.success(post))
+        }
+    }
+}
+
+
 extension Comment {
     func toDictionary() -> [String: Any] {
         return ["postUser": postUser, "content": content, "likes": likes]
@@ -388,87 +382,5 @@ extension Tag {
         guard let name = dictionary["name"] as? String,
               let type = dictionary["type"] as? String else { return nil }
         return Tag(name: name, type: type)
-    }
-}
-
-func loadAllPosts(completion: @escaping (Result<[Post], Error>) -> Void) {
-    let db = Firestore.firestore()
-    let storage = Storage.storage().reference()
-    
-    db.collection("posts").getDocuments { snapshot, error in
-        if let error = error {
-            completion(.failure(error))
-            return
-        }
-        
-        guard let documents = snapshot?.documents else {
-            completion(.failure(NSError(domain: "FirestoreError", code: -1, userInfo: [NSLocalizedDescriptionKey: "No posts found"])))
-            return
-        }
-        
-        var posts: [Post] = []
-        let dispatchGroup = DispatchGroup()
-        var errors: [Error] = []
-        
-        for document in documents {
-            let data = document.data()
-            
-            guard let postManagerID = data["postManagerID"] as? String,
-                  let title = data["title"] as? String,
-                  let postImageURL = data["postImageURL"] as? String,
-                  let postContent = data["postContent"] as? String,
-                  let eventDate = data["eventDate"] as? String,
-                  let location = data["location"] as? String,
-                  let likes = data["likes"] as? Int,
-                  let tagsData = data["tags"] as? [[String: Any]]
-            else {
-                errors.append(NSError(domain: "SerializationError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to deserialize a post"]))
-                continue
-            }
-            
-            dispatchGroup.enter()
-            
-            // Download image for each post
-            let imageRef = storage.child(postImageURL)
-            imageRef.getData(maxSize: 5 * 1024 * 1024) { data, error in
-                if let error = error {
-                    errors.append(error)
-                    dispatchGroup.leave()
-                    return
-                }
-                
-                guard let imageData = data, let postImage = UIImage(data: imageData) else {
-                    errors.append(NSError(domain: "ImageError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to download image"]))
-                    dispatchGroup.leave()
-                    return
-                }
-                
-                // Deserialize tags and comments
-                let tags = tagsData.compactMap { Tag.fromDictionary($0) }
-                
-                let documentData = document.data()
-                
-                guard let commentsData = documentData["comments"] as? [[String: Any]] else {
-                    print("No comments field or incorrect type in Firestore document")
-                    return
-                }
-
-                let comments = commentsData.compactMap { Comment.fromDictionary($0) }
-                
-                // Create Post object
-                let post = Post(postManager: postManagerID, title: title, postImage: postImage, postContent: postContent, location: location, eventDate: eventDate, likes: likes, comments: comments, tags: tags)
-                
-                posts.append(post)
-                dispatchGroup.leave()
-            }
-        }
-        
-        dispatchGroup.notify(queue: .main) {
-            if errors.isEmpty {
-                completion(.success(posts))
-            } else {
-                completion(.failure(errors.first!)) // Return the first error encountered
-            }
-        }
     }
 }

@@ -16,7 +16,7 @@ struct VolunteerView: View {
     
     // Navigate to Edit Profile Screen (example)
     @State private var isEditingProfile = false
-    @Binding var isLoggedIn: Bool
+    @State private var isNotLoggedIn = false
     
     var body: some View {
         NavigationView {
@@ -84,13 +84,18 @@ struct VolunteerView: View {
                         // Handle switch account action
                         Task {
                             print("Switch Account tapped")
+                            isNotLoggedIn = true
+                            print("toggledlogin")
+                            print("Signed out")
                             authManager.signOut()
-                            isLoggedIn = false
                         }
                     }) {
                         Text("Switch Account")
                             .font(.headline)
                             .foregroundColor(.red)
+                    }
+                    .navigationDestination(isPresented: $isNotLoggedIn) {
+                        LoginView()
                     }
                 }
                 .padding()

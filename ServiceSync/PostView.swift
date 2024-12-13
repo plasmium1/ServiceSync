@@ -70,11 +70,13 @@ struct PostView: View {
             }
             
             
-            post.getPostImage()
-                .resizable()
-                .scaledToFill()
-                .frame(width: 400, height: 250)
-                .cornerRadius(10)
+            if let img = post.getPostImage() {
+                img
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 400, height: 250)
+                    .cornerRadius(10)
+            }
             
             Text(post.getPostContent())
                 .font(.body)
@@ -125,11 +127,6 @@ struct PostView: View {
                         .foregroundColor(.white)
                         .cornerRadius(5)
                 }
-                
-                
-                
-                
-                
                 Button(action: {
                     withAnimation {
                         showReport.toggle()
@@ -141,8 +138,6 @@ struct PostView: View {
                         .padding()
                         .foregroundColor(.red)
                 }
-                
-                
 //
             }
             if showReport{
