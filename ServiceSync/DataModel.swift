@@ -9,7 +9,9 @@ import Foundation
 import SwiftUI
 
 
-class User: ObservableObject {
+import UIKit
+
+class User: ObservableObject, Codable {
     @Published var username: String
     var role: String
     var id: String
@@ -17,16 +19,76 @@ class User: ObservableObject {
     @Published var liked: [UUID] = []
     @Published var email: String
     @Published var badges: [String?] = []
-    
-    init(username: String, role: String, id: String, profileImage: UIImage?, email: String, badges: [String?]) {
+    @Published var interests: [String?] = []
+    @Published var description: String
+    @Published var age: Int
+    @Published var telephone: Int
+    @Published var website: String
+
+    enum CodingKeys: String, CodingKey {
+        case username, role, id, profileImage, liked, email, badges, interests, description, age, telephone, website
+    }
+
+    init(username: String, role: String, id: String, profileImage: UIImage?, email: String, badges: [String?], interests: [String?], description: String, age: Int, telephone: Int, website: String) {
         self.username = username
         self.role = role
         self.id = id
         self.profileImage = profileImage
         self.email = email
         self.badges = badges
+        self.interests = interests
+        self.description = description
+        self.age = age
+        self.telephone = telephone
+        self.website = website
     }
-    
+
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.username = try container.decode(String.self, forKey: .username)
+        self.role = try container.decode(String.self, forKey: .role)
+        self.id = try container.decode(String.self, forKey: .id)
+
+        if let profileImageData = try container.decodeIfPresent(Data.self, forKey: .profileImage) {
+            self.profileImage = UIImage(data: profileImageData)
+        } else {
+            self.profileImage = nil
+        }
+
+        self.liked = try container.decode([UUID].self, forKey: .liked)
+        self.email = try container.decode(String.self, forKey: .email)
+        self.badges = try container.decode([String?].self, forKey: .badges)
+        self.interests = try container.decode([String?].self, forKey: .interests)
+        self.description = try container.decode(String.self, forKey: .description)
+        self.age = try container.decode(Int.self, forKey: .age)
+        self.telephone = try container.decode(Int.self, forKey: .telephone)
+        self.website = try container.decode(String.self, forKey: .website)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(username, forKey: .username)
+        try container.encode(role, forKey: .role)
+        try container.encode(id, forKey: .id)
+
+        if let profileImage = profileImage {
+            let profileImageData = profileImage.jpegData(compressionQuality: 1.0)
+            try container.encode(profileImageData, forKey: .profileImage)
+        } else {
+            try container.encodeNil(forKey: .profileImage)
+        }
+
+        try container.encode(liked, forKey: .liked)
+        try container.encode(email, forKey: .email)
+        try container.encode(badges, forKey: .badges)
+        try container.encode(interests, forKey: .interests)
+        try container.encode(description, forKey: .description)
+        try container.encode(age, forKey: .age)
+        try container.encode(telephone, forKey: .telephone)
+        try container.encode(website, forKey: .website)
+        
+    }
+
     func getUsername() -> String {
         return self.username
     }
@@ -41,6 +103,14 @@ class User: ObservableObject {
     
     func getEmail() -> String {
         return self.email
+    }
+    
+    func getAge() -> Int {
+        return self.age
+    }
+
+    func getInterests() -> [String?] {
+        return self.interests
     }
     
     func likePost(id: UUID) {
@@ -83,87 +153,55 @@ class User: ObservableObject {
             }
         }
     }
-}
-
-class StudentUser: User {
-    @Published var name: String
-    var interests: [UUID]?
-    var aboutMe: String = ""
-    @Published var age: Int
-    
-    
-    init(name: String, username: String, id: String, age: Int, interests: [UUID]?, aboutMe: String, email: String, profileImage: UIImage?, badges: [String]) {
-        self.name = name
-        self.age = age
-        self.interests = interests
-        self.aboutMe = aboutMe
-        super.init(username: username, role: "student", id: id, profileImage: profileImage, email: email, badges: badges)
-    }
-    
-    func getName() -> String {
-        return self.name
-    }
-    
-    func getAge() -> Int {
-        return self.age
-    }
-    
-    func getInterests() -> [UUID]? {
-        return self.interests!
-    }
-}
-
-class ManagerUser: User {
-    @Published var telephone: Int
-    @Published var description: String
-    @Published var registeredStudents: [String] = []
-    @Published var website: String?
-    
-    
-    init(programName: String, id: String, email: String, telephone: Int, description: String, profileImage: UIImage?, website: String?, badges: [String?]) {
-        
-        self.telephone = telephone
-        self.description = description
-        super.init(username: programName, role: "manager", id: id, profileImage: profileImage, email: email, badges: badges)
-    }
     
     func getTelephone() -> Int {
         return self.telephone
     }
-    
+
     func getDescription() -> String {
         return self.description
     }
-    
-    
+
     func getWebsite() -> String! {
         return self.website
     }
-    
+
     func setProgramName(programName: String) {
         self.username = programName
     }
-    
+
     func setDescription(description: String) {
         self.description = description
     }
-    
+
     func setWebsite(website: String) {
         self.website = website
     }
     
-    func addStudent(student: StudentUser) {
-        self.registeredStudents.append(student.getID())
-    }
-    
-    func removeStudent(student: StudentUser) {
-        for i in 0...registeredStudents.count {
-            if registeredStudents[i] == student.getID() {
-                registeredStudents.remove(at: i)
+    func toDictionary() -> [String: Any] {
+            var dictionary: [String: Any] = [
+                "username": username,
+                "role": role,
+                "id": id,
+                "liked": liked.map { $0.uuidString },
+                "email": email,
+                "badges": badges,
+                "interests": interests,
+                "description": description,
+                "age": age,
+                "telephone": telephone,
+                "website": website
+            ]
+
+            if let profileImage = profileImage, let imageData = profileImage.pngData() {
+                dictionary["profileImage"] = imageData
+            } else {
+                dictionary["profileImage"] = nil
             }
+
+
+            return dictionary
         }
-    }
-    
 }
 
 class Tag: Identifiable, Hashable, Equatable {
@@ -244,17 +282,17 @@ class Post: Identifiable, Hashable, Equatable, ObservableObject {
         return lhs.id == rhs.id
         }
     
-    func getPostManager(completion: @escaping (ManagerUser?) -> Void) {
-        loadManagerUser(userID: postManagerID) { result in
-            switch result {
-            case .success(let manager):
-                completion(manager)
-            case .failure(let error):
-                print("Load manager failed \(error)")
-                completion(nil)
-            }
-        }
-    }
+//    func getPostManager(completion: @escaping (ManagerUser?) -> Void) {
+//        loadManagerUser(userID: postManagerID) { result in
+//            switch result {
+//            case .success(let manager):
+//                completion(manager)
+//            case .failure(let error):
+//                print("Load manager failed \(error)")
+//                completion(nil)
+//            }
+//        }
+//    }
     
     func getID() -> UUID {
         return id
@@ -343,17 +381,17 @@ class Comment {
         self.likes = likes
     }
     
-    func getUser(completion: @escaping (StudentUser?) -> Void) {
-        loadStudentUser(userID: postUser) { result in
-            switch result {
-            case .success(let student):
-                completion(student)
-            case .failure(let error):
-                print("Load manager failed \(error)")
-                completion(nil)
-            }
-        }
-    }
+//    func getUser(completion: @escaping (StudentUser?) -> Void) {
+//        loadStudentUser(userID: postUser) { result in
+//            switch result {
+//            case .success(let student):
+//                completion(student)
+//            case .failure(let error):
+//                print("Load manager failed \(error)")
+//                completion(nil)
+//            }
+//        }
+//    }
     
     func getContent() -> String {
         return self.content
@@ -445,7 +483,7 @@ var placeholderTag4 = Tag(name: "Sports", type: "Sports")
 var placeholderTagsArray = [placeholderTag, placeholderTag2,placeholderTag3, placeholderTag4]
 
 
-//var placeholderStudent = StudentUser(name: "Alex Konwar", username: "AKonwar", age: 17, interests: [placeholderTag.getID()], aboutMe: "I just love making placeholders", email: "fakeemail@gmail.com", profileImage: UIImage(named:"profilePic"), badges: ["completed_challenge", "volunteered_5_times", "volunteered_10_times", "stand_out"])
+//var placeholderStudent = StudentUser(name: "", username: "", id: "", age: 0, interests: [], aboutMe: "", email: "", profileImage: nil, badges: [])
 
 //var placeholderComment = Comment(postUser: placeholderStudent, content: "Cool!", likes: 0)
 
@@ -483,16 +521,16 @@ var filters: [Bool] {
     return results
 }
 
-var managerDictionary: [String: ManagerUser] = [:]
-
-func fetchManagerUsers() {
-    loadManagerUsers { result in
-        switch result {
-        case .success(let loadedUsers):
-            managerDictionary = loadedUsers
-            print("Manager users loaded successfully.")
-        case .failure(let error):
-            print("Error loading manager users: \(error.localizedDescription)")
-        }
-    }
-}
+//var managerDictionary: [String: ManagerUser] = [:]
+//
+//func fetchManagerUsers() {
+//    loadManagerUsers { result in
+//        switch result {
+//        case .success(let loadedUsers):
+//            managerDictionary = loadedUsers
+//            print("Manager users loaded successfully.")
+//        case .failure(let error):
+//            print("Error loading manager users: \(error.localizedDescription)")
+//        }
+//    }
+//}

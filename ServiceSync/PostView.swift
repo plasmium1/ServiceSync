@@ -13,7 +13,7 @@ struct PostView: View {
     @State private var navigateToForm = false
     @State var showReport = false
     @State private var report: String = ""
-    @State private var manager: ManagerUser? = nil
+    @State private var manager: User? = nil
     
     init(post: Post, contextUser: User) {
         self.post = post
@@ -48,11 +48,11 @@ struct PostView: View {
                 Text(manager!.getUsername())
                     .font(.headline)
             }
-            .onAppear {
-                post.getPostManager() { loadedManager in
-                    manager = loadedManager
-                }
-            }
+//            .onAppear {
+//                post.getPostManager() { loadedManager in
+//                    manager = loadedManager
+//                }
+//            }
             
             
             HStack{

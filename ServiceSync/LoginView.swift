@@ -48,7 +48,11 @@ struct LoginView: View {
                         )
                     
                     // Login Button
-                    Button(action: handleLogin) {
+                    Button() {
+                        Task {
+                            await handleLogin()
+                        }
+                    }label:{
                         Text("Login")
                             .frame(maxWidth: .infinity)
                             .padding()
@@ -85,24 +89,32 @@ struct LoginView: View {
             .ignoresSafeArea()
         }
         .fullScreenCover(isPresented: $isLoggedIn) {
-            ContentView(contextUser: authManager.user!.role) // Main app view after login
+            ContentView(contextUser: authManager.currentUser!.role, isLoggedIn: $isLoggedIn) // Main app view after login
         }
+        
     }
 
     // Login Logic
-    func handleLogin() {
-        if email.isEmpty || password.isEmpty {
-            showError = true
-            errorMessage = "Please fill in all fields."
-        } else if !isValidEmail(email) {
-            showError = true
-            errorMessage = "Please enter a valid email address."
-        } else {
-            // Simulate successful login
-            showError = false
-            isLoggedIn = true
-            authManager.signIn(email: email, password: password) {result in}
+    func handleLogin() async {
+        do {
+            if email.isEmpty || password.isEmpty {
+                showError = true
+                errorMessage = "Please fill in all fields."
+            } else if !isValidEmail(email) {
+                showError = true
+                errorMessage = "Please enter a valid email address."
+            } else {
+                // Simulate successful login
+                showError = false
+                print("Logging in as \(email)")
+                try await authManager.signIn(withEmail: email, password: password)
+                print(authManager.currentUser!.role)
+                isLoggedIn = true
+            }
+        } catch {
+            print("Failed to log in user")
         }
+        
     }
 
     // Basic Email Validation
