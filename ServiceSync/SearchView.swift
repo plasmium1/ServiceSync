@@ -48,18 +48,13 @@ struct SearchView: View {
                 if focusContent == true{
                     if post.getPostContent().contains(searchText) || post.getPostContent().contains(searchText.lowercased()) {
                         results.append(post)
-                        
                     }
                 }
                 else if focusProgram == true{
                     if post.getTitle().contains(searchText) || post.getTitle().contains(searchText.lowercased())  {
                         results.append(post)
-                        
                     }
                 }
-                
-                
-                
             }
             
             if results.count > 1 {
@@ -299,7 +294,8 @@ struct SearchView: View {
                     let postContent = data["postContent"] as? String,
                     let location = data["location"] as? String,
                     let eventDate = data["eventDate"] as? String,
-                    let tagsArray = data["tags"] as? [[String: Any]]
+                    let tagsArray = data["tags"] as? [[String: Any]],
+                    let imageURL = data["postImage"] as? String
                 else {
                     print("Error parsing post data for document ID: \(document.documentID)")
                     return nil
@@ -308,7 +304,7 @@ struct SearchView: View {
                 // Convert optional properties
                 let likes = data["likes"] as? Int
                 let commentsArray = data["comments"] as? [[String: Any]]
-                let reportsArray = data["reports"] as? [String]
+//                let reportsArray = data["reports"] as? [String]
                 
                 // Load tags
                 let tags = tagsArray.compactMap { Tag.fromDictionary($0) }
@@ -317,18 +313,13 @@ struct SearchView: View {
                 let comments = commentsArray?.compactMap { Comment.fromDictionary($0) }
                 
                 // Load post image (optional)
-                var postImage = UIImage()
-                if let imageURLString = data["postImageURL"] as? String,
-                   let imageURL = URL(string: imageURLString),
-                   let imageData = try? Data(contentsOf: imageURL) {
-                    postImage = UIImage(data: imageData) ?? UIImage()
-                }
+                
                 
                 // Initialize the Post object
                 return Post(
                     postManager: postManagerID,
                     title: title,
-                    postImage: postImage,
+                    postImageURL: imageURL,
                     postContent: postContent,
                     location: location,
                     eventDate: eventDate,

@@ -11,7 +11,7 @@ import FirebaseStorage
 
 struct HomeScreen: View {
     @EnvironmentObject private var authManager: AuthenticationManager
-    @State private var postsList: [Post] = []
+    @State private var posts: [Post] = []
     @State private var isLoading = true
     @State private var isUserLoading = true
 
@@ -21,13 +21,13 @@ struct HomeScreen: View {
 
             if isLoading {
                 ProgressView("Loading Posts...")
-            } else if postsList.isEmpty {
+            } else if posts.isEmpty {
                 Text("No posts available")
                     .font(.headline)
                     .foregroundColor(.gray)
             } else {
                 ScrollView {
-                    ForEach(postsList) { post in
+                    ForEach(posts) { post in
                         if let currentUser = authManager.currentUser {
                             PostView(post: post, contextUser: currentUser)
                                 .padding()
@@ -41,57 +41,35 @@ struct HomeScreen: View {
         .task {
             await authManager.fetchUser()
             isLoading = false
+            setupPostListener()
         }
+        
     }
 
-    private func fetchPosts(completion: @escaping ([Post]) -> Void) {
+    func setupPostListener() {
         let db = Firestore.firestore()
-        db.collection("posts").getDocuments { snapshot, error in
+        db.collection("posts").addSnapshotListener { snapshot, error in
             if let error = error {
-                print("Error fetching posts: \(error)")
-                completion([])
+                print("Error listening for posts: \(error.localizedDescription)")
                 return
             }
-
+            
             guard let documents = snapshot?.documents else {
-                print("No documents found")
-                completion([])
+                print("No posts found")
                 return
             }
-
-            let posts: [Post] = documents.compactMap { document in
-                let data = document.data()
-                guard let postManagerID = data["postManagerID"] as? String,
-                      let title = data["title"] as? String,
-                      let postContent = data["postContent"] as? String,
-                      let location = data["location"] as? String,
-                      let eventDate = data["eventDate"] as? String,
-                      let tagsData = data["tags"] as? [[String: Any]] else {
-                    return nil
+            
+            do {
+                let updatedPosts = try documents.compactMap { document -> Post? in
+                    let post = try document.data(as: Post.self)
+                    return post
                 }
-
-                let tags: [Tag] = tagsData.compactMap { tagData in
-                    guard let name = tagData["name"] as? String,
-                          let type = tagData["type"] as? String else { return nil }
-                    return Tag(name: name, type: type)
+                DispatchQueue.main.async {
+                    self.posts = updatedPosts
                 }
-
-                let postImage = UIImage(systemName: "photo")!
-
-                return Post(
-                    postManager: postManagerID,
-                    title: title,
-                    postImage: postImage,
-                    postContent: postContent,
-                    location: location,
-                    eventDate: eventDate,
-                    likes: data["likes"] as? Int ?? 0,
-                    comments: [],
-                    tags: tags
-                )
+            } catch {
+                print("Error decoding posts: \(error.localizedDescription)")
             }
-
-            completion(posts)
         }
     }
 }

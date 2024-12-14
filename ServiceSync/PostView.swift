@@ -6,6 +6,9 @@
 //
 
 import SwiftUI
+import Firebase
+import FirebaseFirestore
+import FirebaseAuth
 
 struct PostView: View {
     @State var post: Post // Binding to allow updates
@@ -14,6 +17,8 @@ struct PostView: View {
     @State var showReport = false
     @State private var report: String = ""
     @State private var manager: User? = nil
+    
+    @State private var confirmSignUp: Bool = false
     
     init(post: Post, contextUser: User) {
         self.post = post
@@ -51,28 +56,35 @@ struct PostView: View {
                 }
             }
             
-            HStack{
-                ForEach(post.getTags()){ tags in
-                    ZStack{
-                        RoundedRectangle(cornerRadius: 10)
-                            .foregroundColor( tags.getTypeColor())
-                        
-                        Text(tags.getName())
-                            .scaledToFit()
-                        
+            ScrollView(.horizontal) {
+                HStack{
+                    ForEach(post.getTags()){ tags in
+                        ZStack{
+                            RoundedRectangle(cornerRadius: 10)
+                                .foregroundColor( tags.getTypeColor())
+                            
+                            Text(tags.getName())
+                                .scaledToFit()
+                            
+                        }
+                        .frame(width:150)
                     }
-                    .frame(width:150)
                 }
             }
             
-            
-            if let img = post.getPostImage() {
-                img
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width: 400, height: 250)
-                    .cornerRadius(10)
-            }
+            AsyncImage(url: URL(string: post.postImageURL!)){ result in
+                    result.image?
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 400, height: 250)
+                        .cornerRadius(10)
+                }
+//            if let img = post.getPostImage() {
+//                img
+//                    .scaledToFill()
+//                    .frame(width: 400, height: 250)
+//                    .cornerRadius(10)
+//            }
             
             Text(post.getPostContent())
                 .font(.body)
@@ -99,30 +111,33 @@ struct PostView: View {
             .padding(.top, 10) // Add padding above location text
             
             HStack {
-                Button(action: {
-                    withAnimation {
-                        if ((contextUser?.isPostLiked(post: post)) != nil) {
-                            contextUser?.unlikePost(id: post.getID())
-                        } else {
-                            contextUser?.likePost(id: post.getID())
-                        }
-                    }
-                }) {
-                    Image(systemName: contextUser?.isPostLiked(post: post) ?? false ? "heart.fill" : "heart")
-                        .foregroundColor(contextUser?.isPostLiked(post: post) ?? false ? .red : .gray)
-                        .font(.title)
-                }
+//                Button(action: {
+//                    withAnimation {
+//                        if ((contextUser?.isPostLiked(post: post)) != nil) {
+//                            contextUser?.unlikePost(id: post.getID())
+//                        } else {
+//                            contextUser?.likePost(id: post.getID())
+//                        }
+//                    }
+//                }) {
+//                    Image(systemName: contextUser?.isPostLiked(post: post) ?? false ? "heart.fill" : "heart")
+//                        .foregroundColor(contextUser?.isPostLiked(post: post) ?? false ? .red : .gray)
+//                        .font(.title)
+//                }
                 Spacer()
                 
                 // NavigationLink for Sign-Up button
-                NavigationLink(value: post) {
+                Button() {
+                    confirmSignUp.toggle()
+                    print("Toggled sign up confirmation")
+                } label: {
                     Text("Sign Up")
                         .padding(.horizontal)
                         .frame(height: 30)
                         .background(Color.blue)
                         .foregroundColor(.white)
                         .cornerRadius(5)
-                }
+                }   
                 Button(action: {
                     withAnimation {
                         showReport.toggle()
@@ -173,6 +188,17 @@ struct PostView: View {
             
             Divider()
         }
+        .alert("Confirm sign up?", isPresented: $confirmSignUp) {
+            Button("Confirm") {
+                Task {
+                    await eventSignUpManager(postID: post.getID())
+                }
+                confirmSignUp.toggle()
+            }
+            Button("Cancel", role:.cancel) {
+                confirmSignUp.toggle()
+            }
+        }
         .padding()
         .navigationDestination(for: Post.self) { post in
             EventFormView(viewModel: EventFormViewModel())
@@ -187,6 +213,17 @@ struct PostView: View {
         if manager == nil {
             print("Failed to fetch manager for post: \(post.getID())")
         }
+    }
+    
+    private func eventSignUpManager(postID: UUID) async {
+        let fs = Firestore.firestore()
+        let au = Auth.auth()
+        
+        let uid = au.currentUser?.uid
+        let userDoc = fs.collection("users").document(uid!)
+        let postRef = fs.collection("posts").document(postID.uuidString)
+        
+        try? await userDoc.updateData(["attendingEvents" : FieldValue.arrayUnion([postRef])])
     }
 }
 
