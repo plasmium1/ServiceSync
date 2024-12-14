@@ -20,11 +20,16 @@ enum Tab{
     var body: some View {
         if (contextUser == "manager") {
             TabView(selection: $selectedTab) {
-                ManagerPostView(contextUser: authManager.currentUser!)
+                AddPostForm(contextUser: authManager.currentUser!)
                     .tabItem {
-                        Label("Home", systemImage: "house")
+                        Label("Add Post", systemImage: "house")
                     }
                     .tag(Tab.home)
+                ManagerPostView(contextUser: authManager.currentUser!)
+                    .tabItem {
+                        Label("Posts", systemImage: "magnifyingglass")
+                    }
+                    .tag(Tab.search)
                 OrganizationView()
                     .tabItem {
                         Label("Profile", systemImage: "person")

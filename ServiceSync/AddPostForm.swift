@@ -12,7 +12,6 @@ import SwiftUI
 import PhotosUI
 
 struct AddPostForm: View {
-    @Binding var posts: [Post]
     @State var contextUser: User
     @State private var username: String = "New User"
     @State private var title: String = ""
@@ -127,7 +126,6 @@ struct AddPostForm: View {
                         switch result {
                         case .success:
                             print("Uploaded new post")
-                            posts.append(newPost)
                             clearFields()
                         case .failure(let error):
                             print("Failed to upload post \(error.localizedDescription)")
