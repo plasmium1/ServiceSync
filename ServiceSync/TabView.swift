@@ -18,60 +18,62 @@ enum Tab{
     @StateObject var myEvents = EventStore()
     
     var body: some View {
-        if (contextUser == "manager") {
-            TabView(selection: $selectedTab) {
-                AddPostForm(contextUser: authManager.currentUser!)
-                    .tabItem {
-                        Label("Add Post", systemImage: "house")
-                    }
-                    .tag(Tab.home)
-                ManagerPostView(contextUser: authManager.currentUser!)
-                    .tabItem {
-                        Label("Posts", systemImage: "magnifyingglass")
-                    }
-                    .tag(Tab.search)
-                OrganizationView()
-                    .tabItem {
-                        Label("Profile", systemImage: "person")
-                    }
-                    .environmentObject(authManager)
-                    .tag(Tab.person)
-                
-            }
-        } else {
-            TabView(selection: $selectedTab){
-//                if let studentUser = viewModel.studentUser {
-                    EventsCalendarView()
-                        .environmentObject(myEvents)
+        if (authManager.currentUser != nil) {
+            if (contextUser == "manager") {
+                TabView(selection: $selectedTab) {
+                    AddPostForm(contextUser: authManager.currentUser!)
                         .tabItem {
-                            Label("Calendar", systemImage: "calendar")
+                            Label("Add Post", systemImage: "house")
                         }
-                        .tag(Tab.calendar) // calendar tab
-                    
-                    SearchView()
+                        .tag(Tab.home)
+                    ManagerPostView(contextUser: authManager.currentUser!)
                         .tabItem {
-                            Label("Search", systemImage: "magnifyingglass")
+                            Label("Posts", systemImage: "magnifyingglass")
                         }
-                        .tag(Tab.search) // search tab
-                        .environmentObject(authManager)
-                    
-                    HomeScreen()
-                        .tabItem{
-                            Label("Home", systemImage: "house")
-                        }
-                        .tag(Tab.home) // home tab
-                        .environmentObject(authManager)
-                    
-                    VolunteerView()
-                        .tabItem{
+                        .tag(Tab.search)
+                    OrganizationView()
+                        .tabItem {
                             Label("Profile", systemImage: "person")
                         }
-                        .tag(Tab.person) // profile tab
                         .environmentObject(authManager)
-//                }
-            }
-            .task {
-                await authManager.fetchUser()
+                        .tag(Tab.person)
+                    
+                }
+            } else {
+                TabView(selection: $selectedTab){
+    //                if let studentUser = viewModel.studentUser {
+                        EventsCalendarView()
+                            .environmentObject(myEvents)
+                            .tabItem {
+                                Label("Calendar", systemImage: "calendar")
+                            }
+                            .tag(Tab.calendar) // calendar tab
+                        
+                        SearchView()
+                            .tabItem {
+                                Label("Search", systemImage: "magnifyingglass")
+                            }
+                            .tag(Tab.search) // search tab
+                            .environmentObject(authManager)
+                        
+                        HomeScreen()
+                            .tabItem{
+                                Label("Home", systemImage: "house")
+                            }
+                            .tag(Tab.home) // home tab
+                            .environmentObject(authManager)
+                        
+                        VolunteerView()
+                            .tabItem{
+                                Label("Profile", systemImage: "person")
+                            }
+                            .tag(Tab.person) // profile tab
+                            .environmentObject(authManager)
+    //                }
+                }
+                .task {
+                    await authManager.fetchUser()
+                }
             }
         }
     }

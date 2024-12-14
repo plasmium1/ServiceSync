@@ -21,107 +21,109 @@ struct VolunteerView: View {
     var body: some View {
         NavigationView {
             VStack {
-                // Profile Header Section
-                HStack {
-                    // Profile Picture (Placeholder or Selected Image)
-                    Group {
-                        if let profileImage = authManager.currentUser!.getProfileImage() {
-                            Image(uiImage: profileImage)
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width: 100, height: 100)
-                                .clipShape(Circle())
-                                .overlay(Circle().stroke(Color.white, lineWidth: 4))
-                        } else {
-                            Circle()
-                                .fill(Color.blue)
-                                .frame(width: 100, height: 100)
-                                .overlay(
-                                    Text(authManager.currentUser!.username.prefix(1)) // First letter of username as placeholder
-                                        .font(.largeTitle)
-                                        .foregroundStyle(Color.white)
-                                )
+                if (authManager.currentUser != nil) {
+                    // Profile Header Section
+                    HStack {
+                        // Profile Picture (Placeholder or Selected Image)
+                        Group {
+                            if let profileImage = authManager.currentUser!.getProfileImage() {
+                                Image(uiImage: profileImage)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 100, height: 100)
+                                    .clipShape(Circle())
+                                    .overlay(Circle().stroke(Color.white, lineWidth: 4))
+                            } else {
+                                Circle()
+                                    .fill(Color.blue)
+                                    .frame(width: 100, height: 100)
+                                    .overlay(
+                                        Text(authManager.currentUser!.username.prefix(1)) // First letter of username as placeholder
+                                            .font(.largeTitle)
+                                            .foregroundStyle(Color.white)
+                                    )
+                            }
                         }
-                    }
-                    .onTapGesture {
-                        // Show the image picker when tapping the profile picture
-                        isImagePickerPresented.toggle()
-                    }
-                    
-                    // User Information
-                    VStack(alignment: .leading) {
-                        Text(authManager.currentUser!.username)
-                            .font(.title)
-                            .fontWeight(.bold)
+                        .onTapGesture {
+                            // Show the image picker when tapping the profile picture
+                            isImagePickerPresented.toggle()
+                        }
                         
-                        Text(authManager.currentUser!.email)
-                            .font(.subheadline)
-                            .foregroundColor(.gray)
-                    }
-                    
-                    Spacer()
-                }
-                .padding()
-                
-                Divider()
-                
-                // Edit Profile and Switch Account Buttons
-                HStack {
-                    Button(action: {
-                        isEditingProfile.toggle()
-                    }) {
-                        Text("Edit Profile")
-                            .font(.headline)
-                            .foregroundColor(.blue)
-                    }
-                    .sheet(isPresented: $isEditingProfile) {
-                        EditVolunteerProfileView(user: authManager.currentUser!)
-                    }
-                    
-                    Spacer()
-                    
-                    Button(action: {
-                        // Handle switch account action
-                        Task {
-                            print("Switch Account tapped")
-                            isNotLoggedIn = true
-                            print("toggledlogin")
-                            print("Signed out")
-                            authManager.signOut()
+                        // User Information
+                        VStack(alignment: .leading) {
+                            Text(authManager.currentUser!.username)
+                                .font(.title)
+                                .fontWeight(.bold)
+                            
+                            Text(authManager.currentUser!.email)
+                                .font(.subheadline)
+                                .foregroundColor(.gray)
                         }
-                    }) {
-                        Text("Switch Account")
-                            .font(.headline)
-                            .foregroundColor(.red)
+                        
+                        Spacer()
                     }
-                    .navigationDestination(isPresented: $isNotLoggedIn) {
-                        LoginView()
-                    }
-                }
-                .padding()
-                
-                Divider()
-                
-                // Badges Section
-                VStack(alignment: .leading) {
-                    Text("Badges")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .padding(.top)
+                    .padding()
                     
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack {
-                            ForEach(authManager.currentUser!.getBadges(), id: \.self) { badgeID in
-                                if let loadedAchievement = badgeLookUp(id: badgeID!) {
-                                    AchievementView(achievement: loadedAchievement)
+                    Divider()
+                    
+                    // Edit Profile and Switch Account Buttons
+                    HStack {
+                        Button(action: {
+                            isEditingProfile.toggle()
+                        }) {
+                            Text("Edit Profile")
+                                .font(.headline)
+                                .foregroundColor(.blue)
+                        }
+                        .sheet(isPresented: $isEditingProfile) {
+                            EditVolunteerProfileView(user: authManager.currentUser!)
+                        }
+                        
+                        Spacer()
+                        
+                        Button(action: {
+                            // Handle switch account action
+                            Task {
+                                print("Switch Account tapped")
+                                isNotLoggedIn = true
+                                print("toggledlogin")
+                                print("Signed out")
+                                authManager.signOut()
+                            }
+                        }) {
+                            Text("Switch Account")
+                                .font(.headline)
+                                .foregroundColor(.red)
+                        }
+                        .navigationDestination(isPresented: $isNotLoggedIn) {
+                            LoginView()
+                        }
+                    }
+                    .padding()
+                    
+                    Divider()
+                    
+                    // Badges Section
+                    VStack(alignment: .leading) {
+                        Text("Badges")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                            .padding(.top)
+                        
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack {
+                                ForEach(authManager.currentUser!.getBadges(), id: \.self) { badgeID in
+                                    if let loadedAchievement = badgeLookUp(id: badgeID!) {
+                                        AchievementView(achievement: loadedAchievement)
+                                    }
                                 }
                             }
                         }
+                        .padding(.vertical)
                     }
-                    .padding(.vertical)
+                    
+                    Spacer()
                 }
-                
-                Spacer()
             }
             .padding()
             .imagePicker(isPresented: $isImagePickerPresented, selectedImage: $selectedImage, onImageSelected: { selectedImage in
