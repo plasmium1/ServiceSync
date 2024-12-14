@@ -20,6 +20,7 @@ struct OrganizationView: View {
     
     // Navigate to Edit Organization Profile Screen
     @State private var isEditingProfile = false
+    @State private var isNotLoggedIn = false
     
     
     var body: some View {
@@ -99,10 +100,20 @@ struct OrganizationView: View {
                     Button(action: {
                         // Handle switch account action (e.g., for admin to switch authManager.currentUser!s)
                         print("Switch Account tapped")
+                        Task {
+                            print("Switch Account tapped")
+                            isNotLoggedIn = true
+                            print("toggledlogin")
+                            print("Signed out")
+                            authManager.signOut()
+                        }
                     }) {
                         Text("Switch Account")
                             .font(.headline)
                             .foregroundStyle(.red)
+                    }
+                    .navigationDestination(isPresented: $isNotLoggedIn) {
+                        LoginView()
                     }
                 }
                 .padding()
