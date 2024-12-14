@@ -42,7 +42,7 @@ struct ManagerPostView: View {
                     .padding()
                     
                     if showForm {
-                        AddPostForm(posts: $posts, contextUser: contextUser)
+                        AddPostForm(contextUser: contextUser)
                             .transition(.slide)
                     }
                 }
