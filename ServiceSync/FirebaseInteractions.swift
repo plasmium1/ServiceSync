@@ -246,7 +246,7 @@ import FirebaseAuth
 //
 func uploadPost(post: Post, completion: @escaping (Result<Void, Error>) -> Void) {
     let db = Firestore.firestore()
-    let storage = Storage.storage().reference()
+//    let storage = Storage.storage().reference()
 
     let postID = post.id.uuidString
     var postData: [String: Any] = [
@@ -259,104 +259,49 @@ func uploadPost(post: Post, completion: @escaping (Result<Void, Error>) -> Void)
         "likes": post.likes ?? 0,
         "comments": post.comments?.map { $0.toDictionary() } ?? [],
         "tags": post.tags.map { $0.toDictionary() },
-        "reports": post.reports ?? []
+        "reports": post.reports ?? [],
+        "postImageURL": post.postImageURL ?? ""
     ]
 
-    if let postImage = post.postImage, let imageData = postImage.jpegData(compressionQuality: 0.8) {
-        let imageRef = storage.child("postImages/\(postID).jpg")
-        imageRef.putData(imageData, metadata: nil) { _, error in
-            if let error = error {
-                completion(.failure(error))
-                return
-            }
-            imageRef.downloadURL { url, error in
-                if let error = error {
-                    completion(.failure(error))
-                    return
-                }
-                postData["postImageURL"] = url?.absoluteString
-                db.collection("posts").document(postID).setData(postData) { error in
-                    if let error = error {
-                        completion(.failure(error))
-                    } else {
-                        completion(.success(()))
-                    }
-                }
-            }
-        }
-    } else {
-        // No image case
-        db.collection("posts").document(postID).setData(postData) { error in
-            if let error = error {
-                completion(.failure(error))
-            } else {
-                completion(.success(()))
-            }
-        }
-    }
-}
-
-
-func loadPost(postID: String, completion: @escaping (Result<Post, Error>) -> Void) {
-    let db = Firestore.firestore()
-    let storage = Storage.storage().reference()
-    
-    db.collection("posts").document(postID).getDocument { snapshot, error in
+    db.collection("posts").document(postID).setData(postData) { error in
         if let error = error {
             completion(.failure(error))
-            return
-        }
-        
-        guard let data = snapshot?.data() else {
-            completion(.failure(NSError(domain: "FirestoreError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Post not found"])))
-            return
-        }
-        
-        // Deserialize Firestore data
-        guard let postManagerID = data["postManagerID"] as? String,
-              let title = data["title"] as? String,
-              let postImageURL = data["postImageURL"] as? String,
-              let postContent = data["postContent"] as? String,
-              let eventDate = data["eventDate"] as? String,
-              let location = data["location"] as? String,
-              let likes = data["likes"] as? Int,
-              let tagsData = data["tags"] as? [[String: Any]],
-              let idString = data["id"] as? String, // Get the `id` as a String
-              let id = UUID(uuidString: idString) // Convert the string to UUID
-        else {
-            completion(.failure(NSError(domain: "SerializationError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to deserialize post"])))
-            return
-        }
-        
-        // Deserialize comments safely
-        let commentsData = data["comments"] as? [Any]
-        let comments: [Comment] = commentsData?.compactMap {
-            guard let commentDict = $0 as? [String: Any] else { return nil }
-            return Comment.fromDictionary(commentDict)
-        } ?? []
-        
-        // Download image
-        let imageRef = storage.child(postImageURL)
-        imageRef.getData(maxSize: 5 * 1024 * 1024) { data, error in
-            if let error = error {
-                completion(.failure(error))
-                return
-            }
-            
-            guard let imageData = data, let postImage = UIImage(data: imageData) else {
-                completion(.failure(NSError(domain: "ImageError", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to download image"])))
-                return
-            }
-            
-            // Deserialize tags
-            let tags = tagsData.compactMap { Tag.fromDictionary($0) }
-            
-            // Create Post object
-            let post = Post(postManager: postManagerID, title: title, postImage: postImage, postContent: postContent, location: location, eventDate: eventDate, likes: likes, comments: comments, tags: tags)
-            post.setID(id: id) // Ensure the post ID is set correctly
-            completion(.success(post))
+        } else {
+            completion(.success(()))
         }
     }
+//    if let postImage = post.postImage, let imageData = postImage.jpegData(compressionQuality: 0.8) {
+//        let imageRef = storage.child("postImages/\(postID).jpg")
+//        imageRef.putData(imageData, metadata: nil) { _, error in
+//            if let error = error {
+//                completion(.failure(error))
+//                return
+//            }
+//            imageRef.downloadURL { url, error in
+//                if let error = error {
+//                    completion(.failure(error))
+//                    return
+//                }
+//                postData["postImageURL"] = url?.absoluteString
+//                db.collection("posts").document(postID).setData(postData) { error in
+//                    if let error = error {
+//                        completion(.failure(error))
+//                    } else {
+//                        completion(.success(()))
+//                    }
+//                }
+//            }
+//        }
+//    } else {
+//        // No image case
+//        db.collection("posts").document(postID).setData(postData) { error in
+//            if let error = error {
+//                completion(.failure(error))
+//            } else {
+//                completion(.success(()))
+//            }
+//        }
+//    }
 }
 
 

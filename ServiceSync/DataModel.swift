@@ -254,7 +254,7 @@ class Post: Identifiable, Hashable, Equatable, ObservableObject, Codable {
     @Published var postManagerID: String
     @Published var id: UUID
     @Published var title: String
-    @Published var postImage: UIImage? // Optional image
+    @Published var postImageURL: String? // Optional image
     @Published var postContent: String
     @Published var eventDate: String
     @Published var location: String
@@ -263,11 +263,11 @@ class Post: Identifiable, Hashable, Equatable, ObservableObject, Codable {
     @Published var tags: [Tag]
     @Published var reports: [String]?
 
-    init(postManager: String, title: String, postImage: UIImage? = nil, postContent: String, location: String, eventDate: String, likes: Int = 0, comments: [Comment] = [], tags: [Tag] = []) {
+    init(postManager: String, title: String, postImageURL: String = "", postContent: String, location: String, eventDate: String, likes: Int = 0, comments: [Comment] = [], tags: [Tag] = []) {
         self.postManagerID = postManager
         self.id = UUID()
         self.title = title
-        self.postImage = postImage
+        self.postImageURL = postImageURL
         self.postContent = postContent
         self.location = location
         self.eventDate = eventDate
@@ -286,7 +286,7 @@ class Post: Identifiable, Hashable, Equatable, ObservableObject, Codable {
 
     // Custom Codable implementation
     enum CodingKeys: String, CodingKey {
-        case postManagerID, id, title, postImage, postContent, eventDate, location, likes, comments, tags, reports
+        case postManagerID, id, title, postImageURL, postContent, eventDate, location, likes, comments, tags, reports
     }
 
     required init(from decoder: Decoder) throws {
@@ -294,11 +294,7 @@ class Post: Identifiable, Hashable, Equatable, ObservableObject, Codable {
         self.postManagerID = try container.decode(String.self, forKey: .postManagerID)
         self.id = try container.decode(UUID.self, forKey: .id)
         self.title = try container.decode(String.self, forKey: .title)
-        if let imageData = try container.decodeIfPresent(Data.self, forKey: .postImage) {
-            self.postImage = UIImage(data: imageData)
-        } else {
-            self.postImage = nil
-        }
+        self.postImageURL = try container.decode(String.self, forKey: .postImageURL)
         self.postContent = try container.decode(String.self, forKey: .postContent)
         self.eventDate = try container.decode(String.self, forKey: .eventDate)
         self.location = try container.decode(String.self, forKey: .location)
@@ -313,9 +309,7 @@ class Post: Identifiable, Hashable, Equatable, ObservableObject, Codable {
         try container.encode(postManagerID, forKey: .postManagerID)
         try container.encode(id, forKey: .id)
         try container.encode(title, forKey: .title)
-        if let image = postImage, let imageData = image.pngData() {
-            try container.encode(imageData, forKey: .postImage)
-        }
+        try container.encode(postImageURL, forKey: .postImageURL)
         try container.encode(postContent, forKey: .postContent)
         try container.encode(eventDate, forKey: .eventDate)
         try container.encode(location, forKey: .location)
@@ -351,9 +345,9 @@ class Post: Identifiable, Hashable, Equatable, ObservableObject, Codable {
         return self.title
     }
     
-    func getPostImage() -> Image? {
-        if let image = self.postImage {
-            return Image(uiImage: image)
+    func getPostImage() -> AsyncImage<Image>? {
+        if let image = self.postImageURL {
+            return AsyncImage(url: URL(string: image))
         } else {
             return nil
         }
@@ -410,8 +404,8 @@ class Post: Identifiable, Hashable, Equatable, ObservableObject, Codable {
         self.title = title
     }
     
-    func setPostImage(image: UIImage) {
-        self.postImage = image
+    func setpostImageURL(image: String) {
+        self.postImageURL = image
     }
     
     func setPostContent(content: String) {
@@ -533,11 +527,11 @@ var placeholderTagsArray = [placeholderTag, placeholderTag2,placeholderTag3, pla
 //var placeholderManager2 = ManagerUser(programName: "Feed The People", email: "fakeemail@gmail.com", telephone: 7735504264, description: "Someone make a fake description to fill this space", profileImage: UIImage(named:"profilePic"), website: nil, badges: ["first_product", "best_startup"])
 
 
-//var placeholderPost1 = Post(postManager: placeholderManager.getID(), title: "WE Bracelets", postImage: UIImage(named:"PlaceholderImageForPost")!, postContent: "Hi everyone! We had an awesome first meeting for WE Bracelets. Looking forward to meeting more people. Please stop by next week for our Thursday meeting!", location: "Location", eventDate: "10/05/2006", likes: 0, comments: [placeholderComment], tags: [placeholderTag])
+//var placeholderPost1 = Post(postManager: placeholderManager.getID(), title: "WE Bracelets", postImageURL: UIImage(named:"PlaceholderImageForPost")!, postContent: "Hi everyone! We had an awesome first meeting for WE Bracelets. Looking forward to meeting more people. Please stop by next week for our Thursday meeting!", location: "Location", eventDate: "10/05/2006", likes: 0, comments: [placeholderComment], tags: [placeholderTag])
 //
-//var placeholderPost2 = Post(postManager: placeholderManager2.getID(), title: "Feed The People", postImage: UIImage(named:"FeedThePeopleImage")!, postContent: "Hi everyone! We had an awesome first meeting for Feed The People. Looking forward to meeting more people. Please stop by next week for our Thursday meeting!", location: "Location", eventDate: "10/05/2006", likes: 0, comments: [placeholderComment], tags: [placeholderTag])
+//var placeholderPost2 = Post(postManager: placeholderManager2.getID(), title: "Feed The People", postImageURL: UIImage(named:"FeedThePeopleImage")!, postContent: "Hi everyone! We had an awesome first meeting for Feed The People. Looking forward to meeting more people. Please stop by next week for our Thursday meeting!", location: "Location", eventDate: "10/05/2006", likes: 0, comments: [placeholderComment], tags: [placeholderTag])
 //
-//var placeholderPost3 = Post(postManager: placeholderManager2.getID(), title: "Nothing Here!", postImage: UIImage(named:"FeedThePeopleImage")!, postContent: "No results found", location: "Location", eventDate: "10/05/2006", likes: 0, comments: [placeholderComment], tags: [placeholderTag])
+//var placeholderPost3 = Post(postManager: placeholderManager2.getID(), title: "Nothing Here!", postImageURL: UIImage(named:"FeedThePeopleImage")!, postContent: "No results found", location: "Location", eventDate: "10/05/2006", likes: 0, comments: [placeholderComment], tags: [placeholderTag])
 
 var placeholderPostArray: [Post] = []
 

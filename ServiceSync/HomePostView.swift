@@ -30,7 +30,6 @@ struct HomePostView: View {
                 }
                 if let img = post.getPostImage() {
                     img
-                        .resizable()
                         .frame(width:410, height:350)
                 }
                 

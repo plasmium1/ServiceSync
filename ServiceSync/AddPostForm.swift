@@ -18,7 +18,7 @@ struct AddPostForm: View {
     @State private var description: String = ""
     @State private var location: String = ""
     @State private var eventDate: String = ""
-    @State private var selectedImage: UIImage? = nil
+    @State private var imageURL: String = ""
     @State private var selectedItem: PhotosPickerItem? = nil
     @State private var selectedTags: Set<Tag> = []
     @State private var availableTags: [Tag] = [
@@ -59,33 +59,36 @@ struct AddPostForm: View {
                 .padding()
 
                 // Image Picker
-                if let selectedImage = selectedImage {
-                    Image(uiImage: selectedImage)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: 150)
-                        .padding()
-                }
-
-                PhotosPicker(
-                    selection: $selectedItem,
-                    matching: .images,
-                    photoLibrary: .shared()
-                ) {
-                    Text("Select Image")
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
-                }
-                .onChange(of: selectedItem) { newItem in
-                    Task {
-                        if let data = try? await newItem?.loadTransferable(type: Data.self),
-                           let uiImage = UIImage(data: data) {
-                            selectedImage = uiImage
-                        }
-                    }
-                }
+//                if let selectedImage = selectedImage {
+//                    Image(uiImage: selectedImage)
+//                        .resizable()
+//                        .scaledToFit()
+//                        .frame(height: 150)
+//                        .padding()
+//                }
+//
+//                PhotosPicker(
+//                    selection: $selectedItem,
+//                    matching: .images,
+//                    photoLibrary: .shared()
+//                ) {
+//                    Text("Select Image")
+//                        .padding()
+//                        .background(Color.blue)
+//                        .foregroundColor(.white)
+//                        .cornerRadius(8)
+//                }
+//                .onChange(of: selectedItem) { newItem in
+//                    Task {
+//                        if let data = try? await newItem?.loadTransferable(type: Data.self),
+//                           let uiImage = UIImage(data: data) {
+//                            selectedImage = uiImage
+//                        }
+//                    }
+//                }
+                TextField("Image URL", text: $imageURL)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .padding()
 
                 // Tag Selection
                 VStack(alignment: .leading) {
@@ -113,7 +116,7 @@ struct AddPostForm: View {
                     let newPost = Post(
                         postManager: contextUser.getID(),
                         title: title,
-                        postImage: selectedImage,
+                        postImageURL: imageURL,
                         postContent: description,
                         location: location,
                         eventDate: eventDate,
@@ -146,7 +149,7 @@ struct AddPostForm: View {
         description = ""
         location = ""
         eventDate = ""
-        selectedImage = nil
+        imageURL = ""
         selectedTags.removeAll()
     }
 }

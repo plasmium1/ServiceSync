@@ -23,14 +23,14 @@ enum Tab{
                 TabView(selection: $selectedTab) {
                     AddPostForm(contextUser: authManager.currentUser!)
                         .tabItem {
-                            Label("Add Post", systemImage: "house")
-                        }
-                        .tag(Tab.home)
-                    ManagerPostView(contextUser: authManager.currentUser!)
-                        .tabItem {
-                            Label("Posts", systemImage: "magnifyingglass")
+                            Label("Add Post", systemImage: "plus.circle")
                         }
                         .tag(Tab.search)
+                    ManagerPostView(contextUser: authManager.currentUser!)
+                        .tabItem {
+                            Label("Posts", systemImage: "list.bullet")
+                        }
+                        .tag(Tab.home)
                     OrganizationView()
                         .tabItem {
                             Label("Profile", systemImage: "person")
@@ -42,19 +42,19 @@ enum Tab{
             } else {
                 TabView(selection: $selectedTab){
     //                if let studentUser = viewModel.studentUser {
-                        EventsCalendarView()
-                            .environmentObject(myEvents)
-                            .tabItem {
-                                Label("Calendar", systemImage: "calendar")
-                            }
-                            .tag(Tab.calendar) // calendar tab
+//                        EventsCalendarView()
+//                            .environmentObject(myEvents)
+//                            .tabItem {
+//                                Label("Calendar", systemImage: "calendar")
+//                            }
+//                            .tag(Tab.calendar) // calendar tab
                         
-                        SearchView()
-                            .tabItem {
-                                Label("Search", systemImage: "magnifyingglass")
-                            }
-                            .tag(Tab.search) // search tab
-                            .environmentObject(authManager)
+//                        SearchView()
+//                            .tabItem {
+//                                Label("Search", systemImage: "magnifyingglass")
+//                            }
+//                            .tag(Tab.search) // search tab
+//                            .environmentObject(authManager)
                         
                         HomeScreen()
                             .tabItem{
