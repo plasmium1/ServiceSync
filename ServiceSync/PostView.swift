@@ -27,33 +27,29 @@ struct PostView: View {
     
     var body: some View {
         VStack(alignment: .leading) {
-            HStack {
-                if let logo = manager!.getProfileImage() {
-                    Image(uiImage: logo)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 100, height: 100)
-                        .clipShape(Circle())
-                        .overlay(Circle().stroke(Color.white, lineWidth: 4))
-                } else {
-                    Circle()
-                        .fill(Color.blue)
-                        .frame(width: 100, height: 100)
-                        .overlay(
-                            Text(manager!.getUsername().prefix(1)) // First letter of organization name as placeholder
-                                .font(.largeTitle)
-                                .foregroundStyle(.white)
-                        )
+            if (manager != nil) {
+                HStack {
+                    if let logo = manager!.getProfileImage() {
+                        Image(uiImage: logo)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 80, height: 80)
+                            .clipShape(Circle())
+                            .overlay(Circle().stroke(Color.white, lineWidth: 4))
+                    } else {
+                        Circle()
+                            .fill(Color.blue)
+                            .frame(width: 80, height: 80)
+                            .overlay(
+                                Text(manager!.getUsername().prefix(1)) // First letter of organization name as placeholder
+                                    .font(.largeTitle)
+                                    .foregroundStyle(.white)
+                            )
+                    }
+                    Text(manager!.getUsername())
+                        .font(.headline)
                 }
-                Text(manager!.getUsername())
-                    .font(.headline)
             }
-//            .onAppear {
-//                post.getPostManager() { loadedManager in
-//                    manager = loadedManager
-//                }
-//            }
-            
             
             HStack{
                 ForEach(post.getTags()){ tags in
@@ -63,7 +59,7 @@ struct PostView: View {
                         
                         Text(tags.getName())
                             .scaledToFit()
-                            
+                        
                     }
                     .frame(width:150)
                 }
@@ -138,7 +134,7 @@ struct PostView: View {
                         .padding()
                         .foregroundColor(.red)
                 }
-//
+                //
             }
             if showReport{
                 ZStack{
@@ -153,7 +149,7 @@ struct PostView: View {
                         TextField("Write your report here", text: $report)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .padding()
-                       
+                        
                         
                         ZStack{
                             RoundedRectangle(cornerRadius: 10)
@@ -180,6 +176,16 @@ struct PostView: View {
         .padding()
         .navigationDestination(for: Post.self) { post in
             EventFormView(viewModel: EventFormViewModel())
+        }
+        .task {
+            await fetchManager()
+        }
+    }
+    
+    private func fetchManager() async {
+        manager = await post.getPostManager()
+        if manager == nil {
+            print("Failed to fetch manager for post: \(post.getID())")
         }
     }
 }

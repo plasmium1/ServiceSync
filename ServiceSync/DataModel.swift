@@ -326,8 +326,21 @@ class Post: Identifiable, Hashable, Equatable, ObservableObject, Codable {
     }
     
     func getPostManager() async -> User? {
-        guard let snapshot = try? await Firestore.firestore().collection("users").document(postManagerID).getDocument() else { return nil }
-        return try? snapshot.data(as: User.self)
+        do {
+            let snapshot = try await Firestore.firestore()
+                .collection("users")
+                .document(postManagerID)
+                .getDocument()
+
+            if let data = snapshot.data() {
+                return try? Firestore.Decoder().decode(User.self, from: data)
+            } else {
+                print("No data found for the document ID: \(postManagerID)")
+            }
+        } catch {
+            print("Failed to fetch post manager: \(error.localizedDescription)")
+        }
+        return nil
     }
     
     func getID() -> UUID {
